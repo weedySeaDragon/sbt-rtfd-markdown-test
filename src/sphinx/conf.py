@@ -29,7 +29,7 @@ import os
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['readthedocs_ext.readthedocs'] #
+extensions = [] #
 
 
 
@@ -283,12 +283,12 @@ texinfo_documents = [
 
 # Markdown support
 
-from recommonmark.parser import CommonMarkParser
+#from recommonmark.parser import CommonMarkParser
 
 # The suffix of source filenames.
 source_suffix = ['.rst', '.md']
 
 source_parsers = {
-	'.md': CommonMarkParser,
+#	'.md': CommonMarkParser,
 }
 
