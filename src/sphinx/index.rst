@@ -4,11 +4,15 @@
 These are some RST examples, using the Read The Docs template.
 This content is here just so I can do some noodling around with sbt, sphinx, github, and Read The Docs.
 
+
+
 .. figure:: rst/static/SmilingMandyOnPatioSmallish-DSC00249-rc.png
   :align: center
 
   **On the internet, no one knows you're a dog.**
 
+
+.. highlights:: This is version **version-here**
 
 
 Sitemap
