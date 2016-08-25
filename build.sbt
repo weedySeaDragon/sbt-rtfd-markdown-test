@@ -4,7 +4,7 @@ name := "sbt-rtfd-markdown-test"
 organization := "com.ashleycaroline"
 val author = "ashley engelund (weedy-sea-dragon @ github)"
 
-version := "1.0"
+version := "0.0.1a"
 
 //scalaVersion := "2.11.8"
 
@@ -35,6 +35,7 @@ val mainAuthor = author
 // TODO get the version from... github? from the version.sbt file?
 
 preprocessVars in Preprocess := Map("PROJECT" -> normalizedName.value,
+  "VERSION" -> version.value,
   "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
   "SHORTPROJECTVERSION" -> version.value,
   "LONGPROJECTVERSION" -> version.value,
@@ -44,6 +45,7 @@ preprocessVars in Preprocess := Map("PROJECT" -> normalizedName.value,
   "EPUBPUBLISHER" -> mainAuthor)
 
 preprocessIncludeFilter in Preprocess := "*.py"
+preprocessIncludeFilter in Preprocess := (preprocessIncludeFilter in Preprocess).value || "*.rst"
 
 target in Preprocess := baseDirectory.value / "src" / "sphinx"
 // this is where the preprocessed configuration file needs to be written
