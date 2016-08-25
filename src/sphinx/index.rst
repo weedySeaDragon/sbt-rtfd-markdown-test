@@ -12,7 +12,7 @@ This content is here just so I can do some noodling around with sbt, sphinx, git
   **On the internet, no one knows you're a dog.**
 
 
-.. highlights:: This is version **version-here**
+.. Attention::  This is version (substitute from the config.py) |version|.
 
 
 Sitemap
