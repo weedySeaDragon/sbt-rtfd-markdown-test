@@ -12,7 +12,7 @@ This content is here just so I can do some noodling around with sbt, sphinx, git
   **On the internet, no one knows you're a dog.**
 
 
-.. Attention::  This is version (substitute from the config.py) |version|.
+.. Attention::  This is version number comes from the /src/sphinx/config.py file: |version|
 
 
 Sitemap
