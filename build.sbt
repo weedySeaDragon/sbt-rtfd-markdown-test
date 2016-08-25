@@ -6,11 +6,15 @@ val author = "ashley engelund (weedy-sea-dragon @ github)"
 
 version := "0.0.1a"
 
-//scalaVersion := "2.11.8"
+scalaVersion := "2.11.8"
+
+//scalaVersion in Global := "2.10.5"
+//scalacOptions in Compile ++= Seq("-deprecation", "-target:jvm-1.7")
 
 
-// configure github page
 enablePlugins(SphinxPlugin, SiteScaladocPlugin, PreprocessPlugin)
+
+
 
 //--------------------------------------------------
 // Preprocess settings for generating documentation:
@@ -33,6 +37,7 @@ val mainAuthor = author
 
 
 // TODO get the version from... github? from the version.sbt file?
+// show thisProject
 
 preprocessVars in Preprocess := Map("PROJECT" -> normalizedName.value,
   "VERSION" -> version.value,
@@ -59,12 +64,11 @@ target in Preprocess := baseDirectory.value / "src" / "sphinx"
 
 
 
-
 //------------------------
 //  Github pages settings
+
 ghpages.settings
 git.remoteRepo := "git@github.com:weedy-sea-dragon/sbt-native-packager.git"
-
 
 
 //-------------------------
@@ -83,12 +87,12 @@ import ReleaseTransformations._
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,
-  runTest,
+//  runTest,
  // releaseStepInputTask(scripted, " com.typesafe.sbt.packager.universal/* debian/* rpm/* docker/* ash/* jar/* bash/* jdkpackager/*"),
   setReleaseVersion,
   commitReleaseVersion,
   tagRelease,
-  publishArtifacts,
+//  publishArtifacts,
   setNextVersion,
   commitNextVersion,
   pushChanges,
