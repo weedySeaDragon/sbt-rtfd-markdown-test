@@ -365,7 +365,7 @@ Here's a reference to the Definitinve RST_ Reference documentation.
 
 .. _RST: http://docutils.sourceforge.net/docs/ref/rst/restructuredtext.html
 
-You can refer to another rst document within the site with a **Sphinx** directive.  A reference to the :doc:`rstcode` like this: ``:doc:`rstcode```
+You can refer to another rst document within the site with a **Sphinx** directive.  A reference to the :ref:`rst_code` like this: ``:ref:`rst_code```
 
 Targets may be indirect and anonymous.  Thus `this phrase`__ may also
 refer to the Targets_ section.
