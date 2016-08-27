@@ -2,6 +2,10 @@ import java.time.Year
 
 import sbt.Keys._
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+
+
 name := "sbt-rtfd-markdown-test"
 organization := "com.ashleycaroline"
 val author = "ashley engelund (weedy-sea-dragon @ github)"
@@ -42,7 +46,7 @@ val mainAuthor = author
 // show thisProject
 
 preprocessVars in Preprocess := Map("PROJECT" -> normalizedName.value,
-  "VERSION" ->  releaseVersion.value.toString(),
+  "VERSION" -> releaseVersion.value.toString(),
   "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
   "SHORTPROJECTVERSION" -> releaseVersion.value.toString(),
   "LONGPROJECTVERSION" -> version.value,
@@ -66,34 +70,82 @@ target in Preprocess := baseDirectory.value / "src" / "sphinx"
 
 // @see http://blog.byjean.eu/2015/07/10/painless-release-with-sbt.html
 
-import Keys._
+/*
+slf4j-api.jar and logback-core.jar in addition to logback-classic.jar on the classpath.
+ */
 
-def setVersionInSphinxConfig:ReleaseStep = {
+
+//lazy val hello = taskKey[Unit]("Prints 'Hello World'")
+//hello := println("hello world!")
+
+
+val writeVersionIntoSphinxConfig = taskKey[Unit]("Runs preprocess:preprocess to replace template values in sphinx/config.py")
+writeVersionIntoSphinxConfig := { state: State =>
+
+ // val s: TaskStreams = streams.value // enable logging for this ERROR causes a compile problem
+ //orig: val log = streams.value.log
+
+  logBuffered := false
+
+
+  //val log = streams.value.log
+ state.log.warn("A warning from writeVersionIntoSphinxConfig.")
   // get the version from release setReleaseVersion
-  st: State =>
-  val vs = st.get(ReleaseKeys.versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
-  val thisVersion = vs._1 // the current version as defined by release
 
-    // now preprocess:
+  val thisVer = ReleaseKeys.versions
 
-    preprocessVars in Preprocess := Map("PROJECT" -> normalizedName.value,
-      "VERSION" ->  thisVersion,
-      "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
-      "SHORTPROJECTVERSION" -> thisVersion,
-      "LONGPROJECTVERSION" -> thisVersion,
-      "AUTHORS" -> mainAuthor,
-      "MAINAUTHOR" -> mainAuthor,
-      "SHORTPROJECTDESC" -> description.value,
-      "EPUBPUBLISHER" -> mainAuthor)
+  state.log.info(s" ReleaseKeys.versions= $thisVer")
+  println(s" ReleaseKeys.versions= $thisVer")
 
-    preprocessIncludeFilter in Preprocess := "*.py"
-    preprocessIncludeFilter in Preprocess := (preprocessIncludeFilter in Preprocess).value || "*.rst"
+  val thisVersion = "0.9"
+  //val vs = get(ReleaseKeys.versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
+  //val thisVersion = vs._1 // the current version as defined by release
 
-    target in Preprocess := baseDirectory.value / "src" / "sphinx"
-    // this is where the preprocessed configuration file needs to be written
+  // now preprocess:
+  preprocessVars in Preprocess := Map("PROJECT" -> normalizedName.value,
+    "VERSION" -> thisVersion,
+    "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
+    "SHORTPROJECTVERSION" -> thisVersion,
+    "LONGPROJECTVERSION" -> thisVersion,
+    "AUTHORS" -> mainAuthor,
+    "MAINAUTHOR" -> mainAuthor,
+    "SHORTPROJECTDESC" -> description.value,
+    "EPUBPUBLISHER" -> mainAuthor)
 
-  st
+  state.log.info(s"set version for sphinx to: $thisVersion")
+  println(s"set version for sphinx to: $thisVersion")
+
+
+ preprocessIncludeFilter in Preprocess := "*.py"
+  preprocessIncludeFilter in Preprocess := (preprocessIncludeFilter in Preprocess).value || "*.rst"
+
+  target in Preprocess := baseDirectory.value / "src" / "sphinx" // this is where the preprocessed configuration file needs to be written
+
+  val result: Option[(State, Result[sbt.File])] = Project.runTask(preprocess, state)
+
+  // handle the result
+  val resultingState:State = result match {
+     case None => {
+       // Key wasn't defined.
+       state.log.error(s"Error when trying to run preprocess: the preprocess task was not defined (Project.runTask(preprocess,state)) resulted in no state; no TaskKey for preprocess was found.")
+       state
+     }
+     case Some((newState, Inc(inc))) => {
+       // error detail, inc is of type Incomplete, use Incomplete.show(inc.tpe) to get an error message
+      state.log.error(s"Error when trying to run preprocess: ${Incomplete.show(inc.tpe)}")
+       newState
+     }
+     case Some((newState, Value(v))) => {
+       state.log.info(s"ran preprocess:preprocess to create a sphinx/config.py file with version=$thisVersion")
+       // success!
+       newState
+     }
+   }
+
+   resultingState
 }
+
+
 
 //------------------------
 //  Github pages settings
@@ -120,14 +172,14 @@ import ReleaseTransformations._
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,
-//  runTest,
- // releaseStepInputTask(scripted, " com.typesafe.sbt.packager.universal/* debian/* rpm/* docker/* ash/* jar/* bash/* jdkpackager/*"),
+  //  runTest,
+  // releaseStepInputTask(scripted, " com.typesafe.sbt.packager.universal/* debian/* rpm/* docker/* ash/* jar/* bash/* jdkpackager/*"),
   setReleaseVersion,
-  setVersionInSphinxConfig,
+  releaseStepTask( writeVersionIntoSphinxConfig),
   commitReleaseVersion,
   tagRelease,
 
-//  publishArtifacts,
+  //  publishArtifacts,
   setNextVersion,
   commitNextVersion,
   //pushChanges,
