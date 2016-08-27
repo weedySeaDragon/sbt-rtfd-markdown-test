@@ -42,7 +42,7 @@ val mainAuthor = author
 // show thisProject
 
 preprocessVars in Preprocess := Map("PROJECT" -> normalizedName.value,
-  "VERSION" -> (version in ThisBuild).value,
+  "VERSION" ->  releaseVersion.value.toString(),
   "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
   "SHORTPROJECTVERSION" -> version.value,
   "LONGPROJECTVERSION" -> version.value,
@@ -88,6 +88,8 @@ import java.time.Year
 releaseUseGlobalVersion := false // use the version read from the version.sbt file
 
 import ReleaseTransformations._
+
+
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,
@@ -96,7 +98,7 @@ releaseProcess := Seq[ReleaseStep](
   setReleaseVersion,
   commitReleaseVersion,
   tagRelease,
-  releaseStepTask(PreprocessPlugin.autoImport.preprocess),
+  releaseStepCommand("preprocess:preprocess"),
 //  publishArtifacts,
   setNextVersion,
   commitNextVersion,
