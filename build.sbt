@@ -100,7 +100,7 @@ releaseProcess := Seq[ReleaseStep](
 //  publishArtifacts,
   setNextVersion,
   commitNextVersion,
-  pushChanges,
+  //pushChanges,
   releaseStepTask(GhPagesKeys.pushSite)
 )
 
