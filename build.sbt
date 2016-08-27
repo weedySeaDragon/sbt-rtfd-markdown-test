@@ -103,7 +103,7 @@ val writeVersionOut = taskKey[Unit]("get the release Task version info from inqu
 
 // if this has a State, writing to the log doesn't happen.
 // MUST USE m "st.log. "?
-writeVersionOut := { st: State =>
+writeVersionOut := {
 
   //-----
   //  from ReleaseExtra.scala private[sbtrelease] def setVersion(selectVersion: Versions => String): ReleaseStep =  { st: State =>
@@ -116,10 +116,16 @@ writeVersionOut := { st: State =>
   }.taskValue
 */
 
-  //val extractedProjectState = Project.extract(st)
+  val currentState = state.value
+  //val extractedProjectState = Project.extract(currentState)
 
+  // is this enough to create the dependency we need on the inquireVersions ReleastState task?
+  //  this actually *calls* it. hm.  is that what we want?
+  val releaseInquireVersionDependency = ReleaseStateTransformations.inquireVersions.apply(currentState)
+  currentState.log.info(s"releaseInquireVersionDependency: ${releaseInquireVersionDependency.attributes}")
   // requires a State:
-  val vs = st.get(ReleaseKeys.versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
+ // val vs = currentState.get(ReleaseKeys.versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
+
   //val selected = selectVersion(vs)
   //st.log.info("Setting version to '%s'." format selected)
   // val useGlobal = st.extract.get(releaseUseGlobalVersion)
@@ -127,7 +133,7 @@ writeVersionOut := { st: State =>
 
   // ReleasePlugin.autoImport.releaseVersion((version in ThisBuild).value)
 
-  st.log.info(s"val vs: vs._1 ${vs._1}    vs._2: ${vs._2}")
+ // currentState.log.info(s"val vs: vs._1 ${vs._1}    vs._2: ${vs._2}")
 
   //-------
 
@@ -136,7 +142,7 @@ writeVersionOut := { st: State =>
 
   // TODO make this dependent on release-inquire-version or whatever that is
 
-  st.log.info(s"version in ThisBuild was updated by release (is from the file): ${(version in ThisBuild).value}")
+  currentState.log.info(s"version in ThisBuild was updated by release (is from the file): ${(version in ThisBuild).value}")
 
   // writes info to a file.  File = the file we wrote to
 
@@ -146,11 +152,17 @@ writeVersionOut := { st: State =>
   val outputFile = new File(bd.getAbsolutePath)
   val bw = new BufferedWriter(new FileWriter(outputFile))
 
-  bw.write(s"val vs: vs._1 ${vs._1}    vs._2: ${vs._2}")
-  bw.write(s"version in ThisBuild was updated by release (is from the file): ${(version in ThisBuild).value}")
+ // bw.write(s"val vs: vs._1 ${vs._1}    vs._2: ${vs._2}")
+  bw.write(s"version in ThisBuild was updated by release (is from the file): ${(version in ThisBuild).value} \n\n")
+  bw.write(s"releaseInquireVersionDependency: ${releaseInquireVersionDependency.attributes}\n\n")
+
+  val relVars = releaseInquireVersionDependency.get((ReleaseKeys.versions))
+  bw.write(s"relVars: ${relVars}\n\n")  // HOORAY!!  THIS IS THE INFO!!!
+
 
   bw.close()
   log.info(s"ta da!! wrote the output to ${outputFile.getName}")
+
 }
 
 //---------------------------------------------
