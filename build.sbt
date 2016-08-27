@@ -44,7 +44,7 @@ val mainAuthor = author
 preprocessVars in Preprocess := Map("PROJECT" -> normalizedName.value,
   "VERSION" ->  releaseVersion.value.toString(),
   "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
-  "SHORTPROJECTVERSION" -> version.value,
+  "SHORTPROJECTVERSION" -> releaseVersion.value.toString(),
   "LONGPROJECTVERSION" -> version.value,
   "AUTHORS" -> mainAuthor,
   "MAINAUTHOR" -> mainAuthor,
