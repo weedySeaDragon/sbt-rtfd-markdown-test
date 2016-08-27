@@ -97,7 +97,8 @@ writeVersionIntoSphinxConfig := { state: State =>
   //val thisVersion = vs._1 // the current version as defined by release
 
   // now preprocess:
-  preprocessVars in Preprocess := Map("PROJECT" -> normalizedName.value,
+
+  preprocessVars := Map("PROJECT" -> normalizedName.value,
     "VERSION" -> thisVersion,
     "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
     "SHORTPROJECTVERSION" -> thisVersion,
@@ -111,8 +112,8 @@ writeVersionIntoSphinxConfig := { state: State =>
   println(s"set version for sphinx to: $thisVersion")
 
 
- preprocessIncludeFilter in Preprocess := "*.py"
-  preprocessIncludeFilter in Preprocess := (preprocessIncludeFilter in Preprocess).value || "*.rst"
+  preprocessIncludeFilter  := "*.py"
+  preprocessIncludeFilter  := (preprocessIncludeFilter in Preprocess).value || "*.rst"
 
   target in Preprocess := baseDirectory.value / "src" / "sphinx" // this is where the preprocessed configuration file needs to be written
 
