@@ -1,5 +1,7 @@
 import java.time.Year
 
+import sbt.Keys._
+
 name := "sbt-rtfd-markdown-test"
 organization := "com.ashleycaroline"
 val author = "ashley engelund (weedy-sea-dragon @ github)"
@@ -36,11 +38,11 @@ resourceDirectory := baseDirectory.value / "resources"
 val mainAuthor = author
 
 
-// TODO get the version from... github? from the version.sbt file?
+// TODO get the version from the version.sbt file
 // show thisProject
 
 preprocessVars in Preprocess := Map("PROJECT" -> normalizedName.value,
-  "VERSION" -> version.value,
+  "VERSION" -> (version in ThisBuild).value,
   "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
   "SHORTPROJECTVERSION" -> version.value,
   "LONGPROJECTVERSION" -> version.value,
@@ -92,6 +94,7 @@ releaseProcess := Seq[ReleaseStep](
   setReleaseVersion,
   commitReleaseVersion,
   tagRelease,
+  releaseStepTask(preprocess),
 //  publishArtifacts,
   setNextVersion,
   commitNextVersion,
