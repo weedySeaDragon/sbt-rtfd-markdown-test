@@ -94,9 +94,10 @@ releaseProcess := Seq[ReleaseStep](
 //  runTest,
  // releaseStepInputTask(scripted, " com.typesafe.sbt.packager.universal/* debian/* rpm/* docker/* ash/* jar/* bash/* jdkpackager/*"),
   setReleaseVersion,
+  releaseStepCommand("preprocess:preprocess"),
   commitReleaseVersion,
   tagRelease,
-  releaseStepCommand("preprocess:preprocess"),
+
 //  publishArtifacts,
   setNextVersion,
   commitNextVersion,
