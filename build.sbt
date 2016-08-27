@@ -1,7 +1,7 @@
+import java.io.{BufferedWriter, FileWriter}
 import java.time.Year
 
 import sbt.Keys._
-
 import sbtrelease._
 
 
@@ -101,9 +101,9 @@ def setVersionOnly(selectVersion: Versions => String): ReleaseStep =  { st: Stat
 // WIP to learn how to get the release settings version info  and use it
 val writeVersionOut = taskKey[Unit]("get the release Task version info from inquireVersions")
 
-// if this has a State, writing to the log doesn't happen. hm.
-writeVersionOut := {
-  val log = streams.value.log
+// if this has a State, writing to the log doesn't happen.
+// MUST USE m "st.log. "?
+writeVersionOut := { st: State =>
 
   //-----
   //  from ReleaseExtra.scala private[sbtrelease] def setVersion(selectVersion: Versions => String): ReleaseStep =  { st: State =>
@@ -111,29 +111,46 @@ writeVersionOut := {
 
   // from sbt documentation: more about settings
 
- /* sourceGenerators in Compile += Def.task {
+  /* sourceGenerators in Compile += Def.task {
     myGenerator(baseDirectory.value, (managedClasspath in Compile).value)
   }.taskValue
 */
 
+  //val extractedProjectState = Project.extract(st)
+
   // requires a State:
-  //val vs = st.get(ReleaseKeys.versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
-  /*val selected = selectVersion(vs)
-    st.log.info("Setting version to '%s'." format selected)
-    val useGlobal = st.extract.get(releaseUseGlobalVersion)
-    val versionStr = (if (useGlobal) globalVersionString else versionString) format selected
-*/
+  val vs = st.get(ReleaseKeys.versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
+  //val selected = selectVersion(vs)
+  //st.log.info("Setting version to '%s'." format selected)
+  // val useGlobal = st.extract.get(releaseUseGlobalVersion)
+  // val versionStr = (if (useGlobal) globalVersionString else versionString) format selected
 
-//-------
+  // ReleasePlugin.autoImport.releaseVersion((version in ThisBuild).value)
 
+  st.log.info(s"val vs: vs._1 ${vs._1}    vs._2: ${vs._2}")
+
+  //-------
 
   //ReleasePlugin.extraReleaseCommands
   //log.info(s"ReleasePlugin.projectSettings: ${ReleasePlugin.projectSettings.mkString(",\n ")}")
 
   // TODO make this dependent on release-inquire-version or whatever that is
 
-  log.info(s"version in ThisBuild was updated by release (is from the file): ${(version in ThisBuild).value}")
+  st.log.info(s"version in ThisBuild was updated by release (is from the file): ${(version in ThisBuild).value}")
 
+  // writes info to a file.  File = the file we wrote to
+
+  val bd = (baseDirectory in ThisBuild).value / "output.txt"
+  val log = streams.value.log
+  // FileWriter
+  val outputFile = new File(bd.getAbsolutePath)
+  val bw = new BufferedWriter(new FileWriter(outputFile))
+
+  bw.write(s"val vs: vs._1 ${vs._1}    vs._2: ${vs._2}")
+  bw.write(s"version in ThisBuild was updated by release (is from the file): ${(version in ThisBuild).value}")
+
+  bw.close()
+  log.info(s"ta da!! wrote the output to ${outputFile.getName}")
 }
 
 //---------------------------------------------
@@ -231,10 +248,9 @@ releaseProcess := Seq[ReleaseStep](
   //  runTest,
   // releaseStepInputTask(scripted, " com.typesafe.sbt.packager.universal/* debian/* rpm/* docker/* ash/* jar/* bash/* jdkpackager/*"),
   setReleaseVersion,
-  releaseStepTask( writeVersionIntoSphinxConfig),
+  releaseStepTask( writeVersionOut),
   commitReleaseVersion,
   tagRelease,
-
   //  publishArtifacts,
   setNextVersion,
   commitNextVersion,
