@@ -85,8 +85,6 @@ publishMavenStyle := false
 
 import java.time.Year
 
-releaseUseGlobalVersion := false // use the version read from the version.sbt file
-
 import ReleaseTransformations._
 
 
