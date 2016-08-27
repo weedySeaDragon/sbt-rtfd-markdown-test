@@ -122,7 +122,13 @@ writeVersionOut := {
   // is this enough to create the dependency we need on the inquireVersions ReleastState task?
   //  this actually *calls* it. hm.  is that what we want?
   val releaseInquireVersionDependency = ReleaseStateTransformations.inquireVersions.apply(currentState)
-  currentState.log.info(s"releaseInquireVersionDependency: ${releaseInquireVersionDependency.attributes}")
+//  currentState.log.info(s"releaseInquireVersionDependency: ${releaseInquireVersionDependency.attributes}")
+
+  val releaseVers:Option[(String, String)] = releaseInquireVersionDependency.get(ReleaseKeys.versions)
+  val actualVersion = releaseVers.get._1  // we know it's the first base on how ReleasePlugin has defined it
+
+  currentState.log.info(s">> HOORAY! The actualVersion = $actualVersion")
+
   // requires a State:
  // val vs = currentState.get(ReleaseKeys.versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
 
