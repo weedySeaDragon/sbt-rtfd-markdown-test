@@ -2,8 +2,7 @@ import java.time.Year
 
 import sbt.Keys._
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import sbtrelease._
 
 
 name := "sbt-rtfd-markdown-test"
@@ -73,26 +72,85 @@ target in Preprocess := baseDirectory.value / "src" / "sphinx"
 //lazy val hello = taskKey[Unit]("Prints 'Hello World'")
 //hello := println("hello world!")
 
+//------------------------------------------------------------
+
+import sbtrelease.ReleaseStateTransformations.{setReleaseVersion=>_,_}
+
+def setVersionOnly(selectVersion: Versions => String): ReleaseStep =  { st: State =>
+  val vs = st.get(ReleaseKeys.versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
+  val selected = selectVersion(vs)
+
+  st.log.info("Setting version to '%s'." format selected)
+  val useGlobal =Project.extract(st).get(releaseUseGlobalVersion)
+  val versionStr = (if (useGlobal) globalVersionString else versionString) format selected
+
+  reapply(Seq(
+    if (useGlobal) version in ThisBuild := selected
+    else version := selected
+  ), st)
+}
+
+
+
+// TODO understand Settings!  How to get the settings for the project AND from a plugin
+// have to have the current State in order to get the releaseinfo and Project settings
+//  @see http://blog.byjean.eu/2015/07/10/painless-release-with-sbt.html example of re-defining the releaseStep for
+//    setting the version.  He uses the state to extract info
+
+//-----------------------------------------------------------------------------
+// WIP to learn how to get the release settings version info  and use it
+val writeVersionOut = taskKey[Unit]("get the release Task version info from inquireVersions")
+
+// if this has a State, writing to the log doesn't happen. hm.
+writeVersionOut := {
+  val log = streams.value.log
+
+  //-----
+  //  from ReleaseExtra.scala private[sbtrelease] def setVersion(selectVersion: Versions => String): ReleaseStep =  { st: State =>
+  //      lazy val setReleaseVersion: ReleaseStep = setVersion(_._1)
+
+  // from sbt documentation: more about settings
+
+ /* sourceGenerators in Compile += Def.task {
+    myGenerator(baseDirectory.value, (managedClasspath in Compile).value)
+  }.taskValue
+*/
+
+  // requires a State:
+  //val vs = st.get(ReleaseKeys.versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
+  /*val selected = selectVersion(vs)
+    st.log.info("Setting version to '%s'." format selected)
+    val useGlobal = st.extract.get(releaseUseGlobalVersion)
+    val versionStr = (if (useGlobal) globalVersionString else versionString) format selected
+*/
+
+//-------
+
+
+  //ReleasePlugin.extraReleaseCommands
+  //log.info(s"ReleasePlugin.projectSettings: ${ReleasePlugin.projectSettings.mkString(",\n ")}")
+
+  // TODO make this dependent on release-inquire-version or whatever that is
+
+  log.info(s"version in ThisBuild was updated by release (is from the file): ${(version in ThisBuild).value}")
+
+}
+
+//---------------------------------------------
 
 val writeVersionIntoSphinxConfig = taskKey[Unit]("Runs preprocess:preprocess to replace template values in sphinx/config.py")
-writeVersionIntoSphinxConfig := { state: State =>
-
- // val s: TaskStreams = streams.value // enable logging for this ERROR causes a compile problem
- //orig: val log = streams.value.log
-
-  logBuffered := false
-
+writeVersionIntoSphinxConfig := {
 
   val log = streams.value.log
  log.warn("A warning from writeVersionIntoSphinxConfig.")
+
   // get the version from release setReleaseVersion
-
   val thisVer = ReleaseKeys.versions
-
   log.info(s" ReleaseKeys.versions= $thisVer")
   println(s" ReleaseKeys.versions= $thisVer")
 
   val thisVersion = "0.9"
+  log.info(s" .... thisVer = $thisVer")
   //val vs = get(ReleaseKeys.versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
   //val thisVersion = vs._1 // the current version as defined by release
 
@@ -118,6 +176,7 @@ writeVersionIntoSphinxConfig := { state: State =>
   sourceDirectory in Preprocess := sourceDirectory.value / "site-preprocess" / "sphinx"
   target in Preprocess := baseDirectory.value / "src" / "sphinx" // this is where the preprocessed configuration file needs to be written
 
+/*
   val result: Option[(State, Result[sbt.File])] = Project.runTask(preprocess in Preprocess, state)
 
   // handle the result
@@ -138,8 +197,8 @@ writeVersionIntoSphinxConfig := { state: State =>
        newState
      }
    }
+  */
 
-   resultingState
 }
 
 
