@@ -200,11 +200,11 @@ Here's the rst; the only difference is the word `ruby` after the ``.. code-block
 Include code from a source file
 -------------------------------
 
-.. literalinclude:: /Keys.scala
+.. literalinclude:: /package.scala
     :language: scala
     :linenos:
     :lines: 1-40
-    :caption: Live code from /src/main/scala/com/typesafe/sbt/packager/universal/Keys.scala
+    :caption: Live code from /src/main/scala/common/package.scala
 
 
 This is taken from the actual source file.  The rst code can reference either absolute file paths or
@@ -227,11 +227,11 @@ and you don't want rst to execute (do) those directives, use `literalinclude`.
 Here's how `literalinclude` was used to read lines from a source file and include them above:
 
 .. parsed-literal::
-   .. literalinclude:: /Keys.scala
+   .. literalinclude:: /package.scala
         :language: scala
         :linenos:
         :lines: 1-40
-        :caption: Live code from /src/main/scala/com/typesafe/sbt/packager/universal/Keys.scala`
+         :caption: Live code from /src/main/scala/common/package.scala
 
 
 parsed-literal shows text without interpreting it
@@ -241,11 +241,11 @@ And here is how to get the above to show as code and not be interpreted by the r
 
 .. parsed-literal::
     .. parsed-literal::
-        .. literalinclude:: /Keys.scala
+        .. literalinclude:: /package.scala
             :language: scala
             :linenos:
             :lines: 1-40
-            :caption: Live code from /src/main/scala/com/typesafe/sbt/packager/universal/Keys.scala`
+            :caption: Live code from /src/main/scala/common/package.scala
 
 
 
