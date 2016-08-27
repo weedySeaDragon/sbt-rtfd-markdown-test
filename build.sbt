@@ -64,7 +64,36 @@ target in Preprocess := baseDirectory.value / "src" / "sphinx"
 //sourceDirectory in Preprocess := sourceDirectory.value / "site-preprocess" / "sphinx"
 //target in Preprocess := sourceDirectory.value / "sphinx"
 
+// @see http://blog.byjean.eu/2015/07/10/painless-release-with-sbt.html
 
+import Keys._
+
+def setVersionInSphinxConfig:ReleaseStep = {
+  // get the version from release setReleaseVersion
+  st: State =>
+  val vs = st.get(ReleaseKeys.versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
+  val thisVersion = vs._1 // the current version as defined by release
+
+    // now preprocess:
+
+    preprocessVars in Preprocess := Map("PROJECT" -> normalizedName.value,
+      "VERSION" ->  thisVersion,
+      "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
+      "SHORTPROJECTVERSION" -> thisVersion,
+      "LONGPROJECTVERSION" -> thisVersion,
+      "AUTHORS" -> mainAuthor,
+      "MAINAUTHOR" -> mainAuthor,
+      "SHORTPROJECTDESC" -> description.value,
+      "EPUBPUBLISHER" -> mainAuthor)
+
+    preprocessIncludeFilter in Preprocess := "*.py"
+    preprocessIncludeFilter in Preprocess := (preprocessIncludeFilter in Preprocess).value || "*.rst"
+
+    target in Preprocess := baseDirectory.value / "src" / "sphinx"
+    // this is where the preprocessed configuration file needs to be written
+
+  st
+}
 
 //------------------------
 //  Github pages settings
@@ -94,7 +123,7 @@ releaseProcess := Seq[ReleaseStep](
 //  runTest,
  // releaseStepInputTask(scripted, " com.typesafe.sbt.packager.universal/* debian/* rpm/* docker/* ash/* jar/* bash/* jdkpackager/*"),
   setReleaseVersion,
-  releaseStepCommand("preprocess:preprocess"),
+  setVersionInSphinxConfig,
   commitReleaseVersion,
   tagRelease,
 
