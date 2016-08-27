@@ -10,3 +10,10 @@ libraryDependencies <+= sbtVersion { sv =>
 
 // Scripted plugin needs to declare this as a dependency
 libraryDependencies += "jline" % "jline" % "2.11"
+
+
+// logging uses the SLF4J java logger.  Must add it here so it's avail early. (If included in build.sbt, places that need it can't yet find it.)
+// @see https://groups.google.com/d/msg/scalatra-user/Dv0Z-DE-KNM/TaBxBNOG9MwJ
+libraryDependencies ++= Seq("ch.qos.logback" % "logback-classic" % "1.1.7",
+  "ch.qos.logback" % "logback-core" % "1.1.7")
+
