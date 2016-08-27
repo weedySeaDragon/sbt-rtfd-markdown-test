@@ -94,7 +94,7 @@ releaseProcess := Seq[ReleaseStep](
   setReleaseVersion,
   commitReleaseVersion,
   tagRelease,
-  releaseStepTask(preprocess),
+  releaseStepTask(PreprocessPlugin.autoImport.preprocess),
 //  publishArtifacts,
   setNextVersion,
   commitNextVersion,
