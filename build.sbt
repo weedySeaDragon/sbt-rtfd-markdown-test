@@ -44,7 +44,7 @@ val mainAuthor = author
 
 // TODO get the version from the version.sbt file
 // show thisProject
-
+/*
 preprocessVars in Preprocess := Map("PROJECT" -> normalizedName.value,
   "VERSION" -> releaseVersion.value.toString(),
   "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
@@ -60,7 +60,7 @@ preprocessIncludeFilter in Preprocess := (preprocessIncludeFilter in Preprocess)
 
 target in Preprocess := baseDirectory.value / "src" / "sphinx"
 // this is where the preprocessed configuration file needs to be written
-
+*/
 
 //preprocessVars in Preprocess := Map("VERSION" -> latestVersion)
 
@@ -69,11 +69,6 @@ target in Preprocess := baseDirectory.value / "src" / "sphinx"
 //target in Preprocess := sourceDirectory.value / "sphinx"
 
 // @see http://blog.byjean.eu/2015/07/10/painless-release-with-sbt.html
-
-/*
-slf4j-api.jar and logback-core.jar in addition to logback-classic.jar on the classpath.
- */
-
 
 //lazy val hello = taskKey[Unit]("Prints 'Hello World'")
 //hello := println("hello world!")
@@ -88,13 +83,13 @@ writeVersionIntoSphinxConfig := { state: State =>
   logBuffered := false
 
 
-  //val log = streams.value.log
- state.log.warn("A warning from writeVersionIntoSphinxConfig.")
+  val log = streams.value.log
+ log.warn("A warning from writeVersionIntoSphinxConfig.")
   // get the version from release setReleaseVersion
 
   val thisVer = ReleaseKeys.versions
 
-  state.log.info(s" ReleaseKeys.versions= $thisVer")
+  log.info(s" ReleaseKeys.versions= $thisVer")
   println(s" ReleaseKeys.versions= $thisVer")
 
   val thisVersion = "0.9"
@@ -112,7 +107,7 @@ writeVersionIntoSphinxConfig := { state: State =>
     "SHORTPROJECTDESC" -> description.value,
     "EPUBPUBLISHER" -> mainAuthor)
 
-  state.log.info(s"set version for sphinx to: $thisVersion")
+  log.info(s"set version for sphinx to: $thisVersion")
   println(s"set version for sphinx to: $thisVersion")
 
 
@@ -127,16 +122,16 @@ writeVersionIntoSphinxConfig := { state: State =>
   val resultingState:State = result match {
      case None => {
        // Key wasn't defined.
-       state.log.error(s"Error when trying to run preprocess: the preprocess task was not defined (Project.runTask(preprocess,state)) resulted in no state; no TaskKey for preprocess was found.")
+       log.error(s"Error when trying to run preprocess: the preprocess task was not defined (Project.runTask(preprocess,state)) resulted in no state; no TaskKey for preprocess was found.")
        state
      }
      case Some((newState, Inc(inc))) => {
        // error detail, inc is of type Incomplete, use Incomplete.show(inc.tpe) to get an error message
-      state.log.error(s"Error when trying to run preprocess: ${Incomplete.show(inc.tpe)}")
+      log.error(s"Error when trying to run preprocess: ${Incomplete.show(inc.tpe)}")
        newState
      }
      case Some((newState, Value(v))) => {
-       state.log.info(s"ran preprocess:preprocess to create a sphinx/config.py file with version=$thisVersion")
+       log.info(s"ran preprocess:preprocess to create a sphinx/config.py file with version=$thisVersion")
        // success!
        newState
      }
