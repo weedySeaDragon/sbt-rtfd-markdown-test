@@ -115,9 +115,10 @@ writeVersionIntoSphinxConfig := { state: State =>
   preprocessIncludeFilter  in Preprocess := "*.py"
   preprocessIncludeFilter in Preprocess  := (preprocessIncludeFilter in Preprocess).value || "*.rst"
 
+  sourceDirectory in Preprocess := sourceDirectory.value / "site-preprocess" / "sphinx"
   target in Preprocess := baseDirectory.value / "src" / "sphinx" // this is where the preprocessed configuration file needs to be written
 
-  val result: Option[(State, Result[sbt.File])] = Project.runTask(preprocess, state)
+  val result: Option[(State, Result[sbt.File])] = Project.runTask(preprocess in Preprocess, state)
 
   // handle the result
   val resultingState:State = result match {
