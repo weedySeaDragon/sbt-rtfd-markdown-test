@@ -1,6 +1,8 @@
 import java.io.{BufferedWriter, FileWriter}
 import java.time.Year
 
+import com.typesafe.sbt.site.preprocess._
+
 import sbt.Keys._
 import sbtrelease._
 
@@ -74,14 +76,14 @@ target in Preprocess := baseDirectory.value / "src" / "sphinx"
 
 //------------------------------------------------------------
 
-import sbtrelease.ReleaseStateTransformations.{setReleaseVersion=>_,_}
+import sbtrelease.ReleaseStateTransformations.{setReleaseVersion => _, _}
 
-def setVersionOnly(selectVersion: Versions => String): ReleaseStep =  { st: State =>
+def setVersionOnly(selectVersion: Versions => String): ReleaseStep = { st: State =>
   val vs = st.get(ReleaseKeys.versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
   val selected = selectVersion(vs)
 
   st.log.info("Setting version to '%s'." format selected)
-  val useGlobal =Project.extract(st).get(releaseUseGlobalVersion)
+  val useGlobal = Project.extract(st).get(releaseUseGlobalVersion)
   val versionStr = (if (useGlobal) globalVersionString else versionString) format selected
 
   reapply(Seq(
@@ -97,13 +99,55 @@ def setVersionOnly(selectVersion: Versions => String): ReleaseStep =  { st: Stat
 //  @see http://blog.byjean.eu/2015/07/10/painless-release-with-sbt.html example of re-defining the releaseStep for
 //    setting the version.  He uses the state to extract info
 
+//-------------------------------------
+
+
+val dumpInfo = taskKey[File]("Display info in log messages and dump it to a text file. Helpful for learning about sbt.")
+
+dumpInfo := {
+
+  val infoSep = "\n-------------------\n"
+  val currentState = state.value
+
+  // TODO get the dump file name
+  // writes info to a file.  File = the file we wrote to
+  val bd = (baseDirectory in ThisBuild).value / "output.txt"
+  // use the FileWriter and a bufferedWriter so we're sure everything gets written out
+  val outputFile = new File(bd.getAbsolutePath)
+  val bw = new BufferedWriter(new FileWriter(outputFile))
+
+  // info to dump
+  //   TODO  one day, load these from the command line.  somehow
+  // val info
+  // val formatString
+
+  bw.write(s"version in ThisBuild: ${(version in ThisBuild).value} \n\n")
+  bw.write(s"$infoSep")
+
+  bw.write(s"\nsettingsData:\n ${settingsData.value.data.mkString("\n  ")}")
+  bw.write(s"$infoSep")
+
+  bw.write(s"\nCurrent State: Attributes:\n ${currentState.attributes}")
+  bw.write(s"$infoSep")
+
+  bw.write(s"\nCurrent State: Configuration:\n ${currentState.configuration}")
+  bw.write(s"$infoSep")
+
+  bw.write(s"\nProject State:\n ${Project.extract(currentState)}")
+
+  bw.close()
+  currentState.log.info(s"\nta da!! dumped the info out to the file named:\n   ${outputFile.getAbsolutePath}")
+  outputFile  // return the file we wrote to
+}
+
+
 //-----------------------------------------------------------------------------
 // WIP to learn how to get the release settings version info  and use it
-val writeVersionOut = taskKey[Unit]("get the release Task version info from inquireVersions")
+val getCurrentReleaseVersion = taskKey[String]("get the currentrelease  version info from inquireVersions, return it as a String")
 
 // if this has a State, writing to the log doesn't happen.
 // MUST USE m "st.log. "?
-writeVersionOut := {
+getCurrentReleaseVersion := {
 
   //-----
   //  from ReleaseExtra.scala private[sbtrelease] def setVersion(selectVersion: Versions => String): ReleaseStep =  { st: State =>
@@ -122,54 +166,80 @@ writeVersionOut := {
   // is this enough to create the dependency we need on the inquireVersions ReleastState task?
   //  this actually *calls* it. hm.  is that what we want?
   val releaseInquireVersionDependency = ReleaseStateTransformations.inquireVersions.apply(currentState)
-//  currentState.log.info(s"releaseInquireVersionDependency: ${releaseInquireVersionDependency.attributes}")
+  //  currentState.log.info(s"releaseInquireVersionDependency: ${releaseInquireVersionDependency.attributes}")
 
-  val releaseVers:Option[(String, String)] = releaseInquireVersionDependency.get(ReleaseKeys.versions)
-  val actualVersion = releaseVers.get._1  // we know it's the first base on how ReleasePlugin has defined it
+  val releaseVers: Option[(String, String)] = releaseInquireVersionDependency.get(ReleaseKeys.versions)
+  val actualVersion: String = releaseVers.get._1 // we know it's the first base on how ReleasePlugin has defined it
 
   currentState.log.info(s">> HOORAY! The actualVersion = $actualVersion")
-
-  // requires a State:
- // val vs = currentState.get(ReleaseKeys.versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
 
   //val selected = selectVersion(vs)
   //st.log.info("Setting version to '%s'." format selected)
   // val useGlobal = st.extract.get(releaseUseGlobalVersion)
   // val versionStr = (if (useGlobal) globalVersionString else versionString) format selected
 
-  // ReleasePlugin.autoImport.releaseVersion((version in ThisBuild).value)
-
- // currentState.log.info(s"val vs: vs._1 ${vs._1}    vs._2: ${vs._2}")
-
-  //-------
-
   //ReleasePlugin.extraReleaseCommands
   //log.info(s"ReleasePlugin.projectSettings: ${ReleasePlugin.projectSettings.mkString(",\n ")}")
 
   // TODO make this dependent on release-inquire-version or whatever that is
 
-  currentState.log.info(s"version in ThisBuild was updated by release (is from the file): ${(version in ThisBuild).value}")
+  currentState.log.info(s"version in ThisBuild: ${(version in ThisBuild).value}")
 
   // writes info to a file.  File = the file we wrote to
-
   val bd = (baseDirectory in ThisBuild).value / "output.txt"
   val log = streams.value.log
   // FileWriter
   val outputFile = new File(bd.getAbsolutePath)
   val bw = new BufferedWriter(new FileWriter(outputFile))
 
- // bw.write(s"val vs: vs._1 ${vs._1}    vs._2: ${vs._2}")
-  bw.write(s"version in ThisBuild was updated by release (is from the file): ${(version in ThisBuild).value} \n\n")
+  // bw.write(s"val vs: vs._1 ${vs._1}    vs._2: ${vs._2}")
+  bw.write(s"version in ThisBuild: ${(version in ThisBuild).value} \n\n")
   bw.write(s"releaseInquireVersionDependency: ${releaseInquireVersionDependency.attributes}\n\n")
 
   val relVars = releaseInquireVersionDependency.get((ReleaseKeys.versions))
-  bw.write(s"relVars: ${relVars}\n\n")  // HOORAY!!  THIS IS THE INFO!!!
+  bw.write(s"relVars: ${relVars}\n\n") // HOORAY!!  THIS IS THE INFO!!!
 
 
   bw.close()
   log.info(s"ta da!! wrote the output to ${outputFile.getName}")
 
+  actualVersion
 }
+
+//---------------------------------------------
+
+val generateSphinxConfigFile = taskKey[File]("Generate the config.py file for Sphinx using preprocess")
+
+generateSphinxConfigFile := {
+
+  val currentState = state.value
+  //val extractedProjectState = Project.extract(currentState)  TODO what is the different between this and state.value?
+
+  // get the current release version:
+  val currentReleaseVer:String = getCurrentReleaseVersion.value
+
+  // set the Settings for preprocess:
+//   val preprocessSphinxConfigInfo := preprocess.PreprocessPlugin.projectSettings
+
+  //preprocess.PreprocessPlugin.autoImport.preprocessVars
+
+  preprocessVars in Preprocess := Map("PROJECT" -> normalizedName.value,
+    "VERSION" -> currentReleaseVer,
+    "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
+    "SHORTPROJECTVERSION" -> currentReleaseVer,
+    "LONGPROJECTVERSION" -> currentReleaseVer,
+    "AUTHORS" -> mainAuthor,
+    "MAINAUTHOR" -> mainAuthor,
+    "SHORTPROJECTDESC" -> description.value,
+    "EPUBPUBLISHER" -> mainAuthor)
+
+  currentState.log.info(s"set version for sphinx to: $currentReleaseVer")
+
+  currentState.log.info(s"preprocessVars: ${(preprocessVars in Preprocess).value.mkString(", ")}")
+
+  new File("output.txt")  // FIXME
+}
+
 
 //---------------------------------------------
 
@@ -177,7 +247,7 @@ val writeVersionIntoSphinxConfig = taskKey[Unit]("Runs preprocess:preprocess to 
 writeVersionIntoSphinxConfig := {
 
   val log = streams.value.log
- log.warn("A warning from writeVersionIntoSphinxConfig.")
+  log.warn("A warning from writeVersionIntoSphinxConfig.")
 
   // get the version from release setReleaseVersion
   val thisVer = ReleaseKeys.versions
@@ -205,34 +275,34 @@ writeVersionIntoSphinxConfig := {
   println(s"set version for sphinx to: $thisVersion")
 
 
-  preprocessIncludeFilter  in Preprocess := "*.py"
-  preprocessIncludeFilter in Preprocess  := (preprocessIncludeFilter in Preprocess).value || "*.rst"
+  preprocessIncludeFilter in Preprocess := "*.py"
+  preprocessIncludeFilter in Preprocess := (preprocessIncludeFilter in Preprocess).value || "*.rst"
 
   sourceDirectory in Preprocess := sourceDirectory.value / "site-preprocess" / "sphinx"
   target in Preprocess := baseDirectory.value / "src" / "sphinx" // this is where the preprocessed configuration file needs to be written
 
-/*
-  val result: Option[(State, Result[sbt.File])] = Project.runTask(preprocess in Preprocess, state)
+  /*
+    val result: Option[(State, Result[sbt.File])] = Project.runTask(preprocess in Preprocess, state)
 
-  // handle the result
-  val resultingState:State = result match {
-     case None => {
-       // Key wasn't defined.
-       log.error(s"Error when trying to run preprocess: the preprocess task was not defined (Project.runTask(preprocess,state)) resulted in no state; no TaskKey for preprocess was found.")
-       state
+    // handle the result
+    val resultingState:State = result match {
+       case None => {
+         // Key wasn't defined.
+         log.error(s"Error when trying to run preprocess: the preprocess task was not defined (Project.runTask(preprocess,state)) resulted in no state; no TaskKey for preprocess was found.")
+         state
+       }
+       case Some((newState, Inc(inc))) => {
+         // error detail, inc is of type Incomplete, use Incomplete.show(inc.tpe) to get an error message
+        log.error(s"Error when trying to run preprocess: ${Incomplete.show(inc.tpe)}")
+         newState
+       }
+       case Some((newState, Value(v))) => {
+         log.info(s"ran preprocess:preprocess to create a sphinx/config.py file with version=$thisVersion")
+         // success!
+         newState
+       }
      }
-     case Some((newState, Inc(inc))) => {
-       // error detail, inc is of type Incomplete, use Incomplete.show(inc.tpe) to get an error message
-      log.error(s"Error when trying to run preprocess: ${Incomplete.show(inc.tpe)}")
-       newState
-     }
-     case Some((newState, Value(v))) => {
-       log.info(s"ran preprocess:preprocess to create a sphinx/config.py file with version=$thisVersion")
-       // success!
-       newState
-     }
-   }
-  */
+    */
 
 }
 
@@ -263,7 +333,7 @@ import ReleaseTransformations._
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,
-  releaseStepTask( writeVersionOut),
+  releaseStepTask(getCurrentReleaseVersion),
   //  runTest,
   // releaseStepInputTask(scripted, " com.typesafe.sbt.packager.universal/* debian/* rpm/* docker/* ash/* jar/* bash/* jdkpackager/*"),
   setReleaseVersion,
