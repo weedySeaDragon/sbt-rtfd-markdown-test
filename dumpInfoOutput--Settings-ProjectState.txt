@@ -1,9 +1,21 @@
-version in ThisBuild: 0.15-SNAPSHOT 
+// This file was generated on Sat, 27 Aug 2016 17:01:23 -0700
+//
+// Ashley Engelund (weedySeaDragon @ github:  This is information dumped from SBT.
+//  I have a little sbt task that just writes information to a test file.  This is the result.
+//  Each object (information) is separated by a line of '-----------'
+//  Each object starts with:  <string description>:value used to generate the output:\n
 
 
 -------------------
 
-settingsData:
+
+
+version in ThisBuild:(version in ThisBuild).value: 0.15-SNAPSHOT
+
+
+-------------------
+
+settingsData:settingsData.value.data.mkString:
  Scope(Select(ProjectRef(file:/Users/ashleyengelund/github/sbt-rtfd-markdown-test/,sbt-rtfd-markdown-test)),Global,Select(ghpagesPushSite),Global) -> (streams: Task(_))
   Scope(Select(ProjectRef(file:/Users/ashleyengelund/github/sbt-rtfd-markdown-test/,sbt-rtfd-markdown-test)),Select(ConfigKey(provided)),Global,Global) -> (configuration: provided)
   Scope(Select(ProjectRef(file:/Users/ashleyengelund/github/sbt-rtfd-markdown-test/,sbt-rtfd-markdown-test)),Select(ConfigKey(test)),Select(packageBin),Global) -> (mappings: Task((taskDefinitionKey: ScopedKey(Scope(Select(ProjectRef(file:/Users/ashleyengelund/github/sbt-rtfd-markdown-test/,sbt-rtfd-markdown-test)),Select(ConfigKey(test)),Select(packageBin),Global),mappings))),
@@ -852,7 +864,7 @@ streams: Task(_))
 evictionWarningOptions: sbt.EvictionWarningOptions@202af77)
 -------------------
 
-Current State: Attributes:
+Current State: Attributes:currentState.attributes:
  (sessionVars: Map(Map()),
 
 history: Some(/Users/ashleyengelund/github/sbt-rtfd-markdown-test/target/.history),
@@ -2192,11 +2204,11 @@ setting(ScopedKey(Scope(Select(BuildRef(file:/Users/ashleyengelund/github/sbt-rt
 onUnload: <function1>, buildStructure: sbt.BuildStructure@2cf026ea, compilerCache: sbt.compiler.CompilerCache$$anon$2@b86984b)
 -------------------
 
-Current State: Configuration:
+Current State: Configuration:currentState.configuration:
  xsbt.boot.AppConfiguration@5f4b9994
 -------------------
 
-Project State:
+Project State:Project.extract(currentState):
  Extracted(sbt.BuildStructure@2cf026ea,SessionSettings(file:/Users/ashleyengelund/github/sbt-rtfd-markdown-test/,Map(file:/Users/ashleyengelund/github/sbt-rtfd-markdown-test/ -> sbt-rtfd-markdown-test),List(setting(ScopedKey(Scope(Global,Global,Global,Global),loadedBuild)) at LinePosition((sbt.Load) Load.scala,196),
 
 setting(ScopedKey(Scope(Global,Global,Global,Global),appConfiguration)) at LinePosition((sbt.Load) Load.scala,57),
