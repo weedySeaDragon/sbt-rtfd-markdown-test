@@ -46,7 +46,7 @@
 # ------------------------------------------------
 # sbt-rtfd-markdown-test              project name ex: sbt-native-packager
 # 2016 ashley engelund (weedy-sea-dragon @ github)   short copyright info ex: 2016 sbt-native-packager team
-# <function1>  the short X.Y version of the project ex: 1.0
+# 0.0.0  the short X.Y version of the project ex: 1.0
 # 0.0.1a   the long version of the project, including alpha, beta tags, etc. ex: 1.0-ALPHA
 # ashley engelund (weedy-sea-dragon @ github)              authors on the project
 # ashley engelund (weedy-sea-dragon @ github)           one (main or original) author for places where only one can be listed ex: Josh Suereth
@@ -106,7 +106,7 @@ copyright = u'2016 ashley engelund (weedy-sea-dragon @ github)'
 # built documents.
 #
 # The short X.Y version.
-version = '<function1>'
+version = '0.0.0'
 # The full version, including alpha/beta/rc tags.
 release = '0.0.1a'
 

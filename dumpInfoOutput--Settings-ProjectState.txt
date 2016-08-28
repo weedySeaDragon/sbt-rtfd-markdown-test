@@ -47,7 +47,8 @@ generatedEpub: Task((taskDefinitionKey: ScopedKey(Scope(Select(ProjectRef(file:/
 
 sphinxTags: List(),
 
-siteSubdirName: , sphinxInputs: Task((taskDefinitionKey: ScopedKey(Scope(Select(ProjectRef(file:/Users/ashleyengelund/github/sbt-rtfd-markdown-test/,sbt-rtfd-markdown-test)),Select(ConfigKey(sphinx)),Global,Global),sphinxInputs))),
+siteSubdirName: ,
+sphinxInputs: Task((taskDefinitionKey: ScopedKey(Scope(Select(ProjectRef(file:/Users/ashleyengelund/github/sbt-rtfd-markdown-test/,sbt-rtfd-markdown-test)),Select(ConfigKey(sphinx)),Global,Global),sphinxInputs))),
 
 generateHtml: Task((taskDefinitionKey: ScopedKey(Scope(Select(ProjectRef(file:/Users/ashleyengelund/github/sbt-rtfd-markdown-test/,sbt-rtfd-markdown-test)),Select(ConfigKey(sphinx)),Global,Global),generateHtml))),
 
@@ -55,9 +56,8 @@ sphinxEnv: Task((taskDefinitionKey: ScopedKey(Scope(Select(ProjectRef(file:/User
 
 generatedPdf: Task((taskDefinitionKey: ScopedKey(Scope(Select(ProjectRef(file:/Users/ashleyengelund/github/sbt-rtfd-markdown-test/,sbt-rtfd-markdown-test)),Select(ConfigKey(sphinx)),Global,Global),generatedPdf))),
 
-sphinxProperties: Map(version -> 0.0.1a, release -> 0.0.1a),
-
-configuration: sphinx, sphinxRunner: Task((taskDefinitionKey: ScopedKey(Scope(Select(ProjectRef(file:/Users/ashleyengelund/github/sbt-rtfd-markdown-test/,sbt-rtfd-markdown-test)),Select(ConfigKey(sphinx)),Global,Global),sphinxRunner))),
+sphinxProperties: Map(version -> 0.0.1a, release -> 0.0.1a), configuration: sphinx,
+sphinxRunner: Task((taskDefinitionKey: ScopedKey(Scope(Select(ProjectRef(file:/Users/ashleyengelund/github/sbt-rtfd-markdown-test/,sbt-rtfd-markdown-test)),Select(ConfigKey(sphinx)),Global,Global),sphinxRunner))),
 
 sphinxIncremental: false, sourceDirectory: /Users/ashleyengelund/github/sbt-rtfd-markdown-test/src/sphinx, target: /Users/ashleyengelund/github/sbt-rtfd-markdown-test/target/sphinx, installPackages: Task((taskDefinitionKey: ScopedKey(Scope(Select(ProjectRef(file:/Users/ashleyengelund/github/sbt-rtfd-markdown-test/,sbt-rtfd-markdown-test)),Select(ConfigKey(sphinx)),Global,Global),installPackages))),
 

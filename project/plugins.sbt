@@ -1,5 +1,4 @@
 addSbtPlugin("com.typesafe.sbt" % "sbt-ghpages" % "0.5.4")
-
 addSbtPlugin("com.typesafe.sbt" % "sbt-site" % "1.0.0") // all version >= 0.8
 addSbtPlugin("com.github.gseitz" % "sbt-release" % "1.0.0")
 addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0")
@@ -17,3 +16,5 @@ libraryDependencies += "jline" % "jline" % "2.11"
 libraryDependencies ++= Seq("ch.qos.logback" % "logback-classic" % "1.1.7",
   "ch.qos.logback" % "logback-core" % "1.1.7")
 
+
+addSbtPlugin("com.github.jozic" % "sbt-about-plugins" % "0.1.0")
