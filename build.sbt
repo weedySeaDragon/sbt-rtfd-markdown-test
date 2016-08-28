@@ -1,7 +1,9 @@
 import java.io.{BufferedWriter, FileWriter}
-import java.time.Year
+import java.time.{Year, ZonedDateTime}
+import java.time.format.DateTimeFormatter
 
 import com.typesafe.sbt.site.preprocess._
+import com.typesafe.sbt.site.preprocess.PreprocessPlugin._
 
 import sbt.Keys._
 import sbtrelease._
@@ -42,10 +44,6 @@ resourceDirectory := baseDirectory.value / "resources"
 // vars and values for the sphinx config file
 val mainAuthor = author
 
-
-// TODO get the version from the version.sbt file
-// show thisProject
-/*
 preprocessVars in Preprocess := Map("PROJECT" -> normalizedName.value,
   "VERSION" -> releaseVersion.value.toString(),
   "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
@@ -61,7 +59,7 @@ preprocessIncludeFilter in Preprocess := (preprocessIncludeFilter in Preprocess)
 
 target in Preprocess := baseDirectory.value / "src" / "sphinx"
 // this is where the preprocessed configuration file needs to be written
-*/
+
 
 //preprocessVars in Preprocess := Map("VERSION" -> latestVersion)
 
@@ -75,26 +73,6 @@ target in Preprocess := baseDirectory.value / "src" / "sphinx"
 //hello := println("hello world!")
 
 //------------------------------------------------------------
-
-import sbtrelease.ReleaseStateTransformations.{setReleaseVersion => _, _}
-
-def setVersionOnly(selectVersion: Versions => String): ReleaseStep = { st: State =>
-  val vs = st.get(ReleaseKeys.versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
-  val selected = selectVersion(vs)
-
-  st.log.info("Setting version to '%s'." format selected)
-  val useGlobal = Project.extract(st).get(releaseUseGlobalVersion)
-  val versionStr = (if (useGlobal) globalVersionString else versionString) format selected
-
-  reapply(Seq(
-    if (useGlobal) version in ThisBuild := selected
-    else version := selected
-  ), st)
-}
-
-
-
-// TODO understand Settings!  How to get the settings for the project AND from a plugin
 // have to have the current State in order to get the releaseinfo and Project settings
 //  @see http://blog.byjean.eu/2015/07/10/painless-release-with-sbt.html example of re-defining the releaseStep for
 //    setting the version.  He uses the state to extract info
@@ -106,8 +84,9 @@ val dumpInfo = taskKey[File]("Display info in log messages and dump it to a text
 
 dumpInfo := {
 
+  val dtFormatter = DateTimeFormatter.RFC_1123_DATE_TIME
   val infoSep = "\n-------------------\n"
-  val currentState = state.value
+  val infoHeader = "// This file was generated on " + dtFormatter.format(ZonedDateTime.now()) + "\n//\n// Ashley Engelund (weedySeaDragon @ github:  This is information dumped from SBT.\n//  I have a little sbt task that just writes information to a test file.  This is the result.\n//  Each object (information) is separated by this line:" + infoSep + "//  Each object starts with:  <string description>:value used to generate the output:\\n\n\n"
 
   // TODO get the dump file name
   // writes info to a file.  File = the file we wrote to
@@ -115,115 +94,70 @@ dumpInfo := {
   // use the FileWriter and a bufferedWriter so we're sure everything gets written out
   val outputFile = new File(bd.getAbsolutePath)
   val bw = new BufferedWriter(new FileWriter(outputFile))
+  bw.write(infoHeader)
+  bw.write(infoSep)
 
   // info to dump
   //   TODO  one day, load these from the command line.  somehow
   // val info
   // val formatString
+  //  bw.write(infoSep)
 
-  bw.write(s"version in ThisBuild: ${(version in ThisBuild).value} \n\n")
+  bw.write(s"version in ThisBuild: (version in ThisBuild).value: ${(version in ThisBuild).value} \n\n")
   bw.write(s"$infoSep")
 
-  bw.write(s"\nsettingsData:\n ${settingsData.value.data.mkString("\n  ")}")
+  bw.write(s"\nsettingsData:settingsData.value.data.mkString:\n ${settingsData.value.data.mkString("\n  ")}")
   bw.write(s"$infoSep")
 
-  bw.write(s"\nCurrent State: Attributes:\n ${currentState.attributes}")
+
+  val currentState = state.value
+  bw.write(s"\nCurrent State: Attributes:currentState.attributes:\n ${currentState.attributes}")
   bw.write(s"$infoSep")
 
-  bw.write(s"\nCurrent State: Configuration:\n ${currentState.configuration}")
+  bw.write(s"\nCurrent State: Configuration:currentState.configuration:\n ${currentState.configuration}")
   bw.write(s"$infoSep")
 
-  bw.write(s"\nProject State:\n ${Project.extract(currentState)}")
+  bw.write(s"\nProject State:Project.extract(currentState):\n ${Project.extract(currentState)}")
 
   bw.close()
   currentState.log.info(s"\nta da!! dumped the info out to the file named:\n   ${outputFile.getAbsolutePath}")
-  outputFile  // return the file we wrote to
+  outputFile // return the file we wrote to
 }
 
-
 //-----------------------------------------------------------------------------
-// WIP to learn how to get the release settings version info  and use it
+// get the release settings version info and return it
 val getCurrentReleaseVersion = taskKey[String]("get the currentrelease  version info from inquireVersions, return it as a String")
-
-// if this has a State, writing to the log doesn't happen.
-// MUST USE m "st.log. "?
 getCurrentReleaseVersion := {
-
-  //-----
-  //  from ReleaseExtra.scala private[sbtrelease] def setVersion(selectVersion: Versions => String): ReleaseStep =  { st: State =>
-  //      lazy val setReleaseVersion: ReleaseStep = setVersion(_._1)
-
-  // from sbt documentation: more about settings
-
-  /* sourceGenerators in Compile += Def.task {
-    myGenerator(baseDirectory.value, (managedClasspath in Compile).value)
-  }.taskValue
-*/
-
+  // TODO make this dependent on release-inquire-version or whatever that is
   val currentState = state.value
-  //val extractedProjectState = Project.extract(currentState)
-
   // is this enough to create the dependency we need on the inquireVersions ReleastState task?
   //  this actually *calls* it. hm.  is that what we want?
   val releaseInquireVersionDependency = ReleaseStateTransformations.inquireVersions.apply(currentState)
-  //  currentState.log.info(s"releaseInquireVersionDependency: ${releaseInquireVersionDependency.attributes}")
-
   val releaseVers: Option[(String, String)] = releaseInquireVersionDependency.get(ReleaseKeys.versions)
   val actualVersion: String = releaseVers.get._1 // we know it's the first base on how ReleasePlugin has defined it
-
   currentState.log.info(s">> HOORAY! The actualVersion = $actualVersion")
-
-  //val selected = selectVersion(vs)
-  //st.log.info("Setting version to '%s'." format selected)
-  // val useGlobal = st.extract.get(releaseUseGlobalVersion)
-  // val versionStr = (if (useGlobal) globalVersionString else versionString) format selected
-
-  //ReleasePlugin.extraReleaseCommands
-  //log.info(s"ReleasePlugin.projectSettings: ${ReleasePlugin.projectSettings.mkString(",\n ")}")
-
-  // TODO make this dependent on release-inquire-version or whatever that is
-
-  currentState.log.info(s"version in ThisBuild: ${(version in ThisBuild).value}")
-
-  // writes info to a file.  File = the file we wrote to
-  val bd = (baseDirectory in ThisBuild).value / "output.txt"
-  val log = streams.value.log
-  // FileWriter
-  val outputFile = new File(bd.getAbsolutePath)
-  val bw = new BufferedWriter(new FileWriter(outputFile))
-
-  // bw.write(s"val vs: vs._1 ${vs._1}    vs._2: ${vs._2}")
-  bw.write(s"version in ThisBuild: ${(version in ThisBuild).value} \n\n")
-  bw.write(s"releaseInquireVersionDependency: ${releaseInquireVersionDependency.attributes}\n\n")
-
-  val relVars = releaseInquireVersionDependency.get((ReleaseKeys.versions))
-  bw.write(s"relVars: ${relVars}\n\n") // HOORAY!!  THIS IS THE INFO!!!
-
-
-  bw.close()
-  log.info(s"ta da!! wrote the output to ${outputFile.getName}")
-
   actualVersion
 }
+//-----------------------------------------------------------------------------
 
-//---------------------------------------------
-
-val generateSphinxConfigFile = taskKey[File]("Generate the config.py file for Sphinx using preprocess")
-
+val generateSphinxConfigFile = taskKey[Unit]("Generate the config.py file for Sphinx using preprocess")
 generateSphinxConfigFile := {
 
   val currentState = state.value
-  //val extractedProjectState = Project.extract(currentState)  TODO what is the different between this and state.value?
+  val currentReleaseVer: String = getCurrentReleaseVersion.value // current version as generated by release
 
-  // get the current release version:
-  val currentReleaseVer:String = getCurrentReleaseVersion.value
+  //----------------------------
+  // based on code from Alive Alexander: @see http://alvinalexander.com/java/jwarehouse/akka-2.3/project/SphinxDoc.scala.shtml
 
-  // set the Settings for preprocess:
-//   val preprocessSphinxConfigInfo := preprocess.PreprocessPlugin.projectSettings
+  def isPyFile(f: File): Boolean = f.getName.endsWith(".py")
+  def isRstFile(f: File): Boolean = f.getName.endsWith(".rst") // not really needed, but here for symmetry
 
-  //preprocess.PreprocessPlugin.autoImport.preprocessVars
+  val sphinxPreprocessFilter: FileFilter = new SimpleFileFilter(isPyFile) || ".rst" // must construct a FileFilter. this is one of the few ways to do it
 
-  preprocessVars in Preprocess := Map("PROJECT" -> normalizedName.value,
+  // customization of sphinx @<key>@ replacements, add to all sphinx-using projects
+  // add additional replacements here
+
+  val sphinxTemplateValues = Map("PROJECT" -> normalizedName.value,
     "VERSION" -> currentReleaseVer,
     "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
     "SHORTPROJECTVERSION" -> currentReleaseVer,
@@ -233,11 +167,39 @@ generateSphinxConfigFile := {
     "SHORTPROJECTDESC" -> description.value,
     "EPUBPUBLISHER" -> mainAuthor)
 
+  // pre-processing settings for generating a sphinx config.py file
+  /**
+    * Need to have these settings set to what you want:
+    * (all in Preprocess):
+    * sourceDirectory,  // default = src/site-preprocess
+    * target,
+    * preprocessIncludeFilter,
+    * preprocessVars.
+    */
+  // TODO why does this need to be scoped to Sphinx?
+  //val sphinxPreprocessing = inConfig(Sphinx)(Seq(
+
+  // NOTE: these have to be ALREADY INITIALIZED before this task is called.  that's why the exist in the project definition
+  target in Preprocess := sourceDirectory.value / "sphinx"
+  preprocessIncludeFilter in Preprocess := sphinxPreprocessFilter
+  preprocessVars in Preprocess := sphinxTemplateValues
+
+  /*    preprocess <<= (sourceDirectory, target in preprocess, cacheDirectory, preprocessExts, preprocessVars, streams) map {
+        (src, target, cacheDir, exts, vars, s) =>
+          simplePreprocess(src, target, cacheDir / "sphinx" / "preprocessed", exts, vars, s.log)
+
+      }, */
+  //   sphinxInputs <<= (sphinxInputs, preprocess) map { (inputs, preprocessed) => inputs.copy(src = preprocessed) } TODO is this needed?
+
+  //++ Seq(
+  //  cleanFiles <+= target in preprocess in Sphinx
+  // )
+
   currentState.log.info(s"set version for sphinx to: $currentReleaseVer")
-
-  currentState.log.info(s"preprocessVars: ${(preprocessVars in Preprocess).value.mkString(", ")}")
-
-  new File("output.txt")  // FIXME
+  currentState.log.info("Preprocess settings:")
+  currentState.log.info(s"  target in Preprocess: ${(target in Preprocess).value}")
+  currentState.log.info(s"  preprocesIncludeFilter: ${(preprocessIncludeFilter in Preprocess).value}")
+  currentState.log.info(s"  preprocessVars: ${(preprocessVars in Preprocess).value.mkString(", ")}")
 }
 
 
