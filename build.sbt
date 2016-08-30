@@ -1,12 +1,12 @@
 import java.io.{BufferedWriter, FileNotFoundException, FileWriter, IOException}
 import java.time.{Year, ZonedDateTime}
 import java.time.format.DateTimeFormatter
- 
-import com.typesafe.sbt.site.preprocess._ 
-import com.typesafe.sbt.site.preprocess.PreprocessPlugin._ 
- 
-import sbt.Keys._ 
-import sbtrelease._ 
+
+import com.typesafe.sbt.site.preprocess._
+import com.typesafe.sbt.site.preprocess.PreprocessPlugin._
+
+import sbt.Keys._
+import sbtrelease._
 
 
 name := "sbt-rtfd-markdown-test"
@@ -134,97 +134,97 @@ dumpInfo := {
   * // TODO get current info in a readable way!
   */
 /**
-  *  reminder: settings are immutable, tasks(TaskSettings) are not -- they are evaluated each time they 're called
-  **
--- all tasks, all not tasks( = settings)
-  *   = by scope
-    *   - alphabetically
+  * reminder: settings are immutable, tasks(TaskSettings) are not -- they are evaluated each time they 're called
+  * *
+  * -- all tasks, all not tasks( = settings)
+  * = by scope
+  *   - alphabetically
   *   - by plugin / source
-    *   - by tuple: project, configuration, scope
-  *  
-  *   ex: setting
-  *   setting (ScopedKey(Scope(Global, Global, Global, Global), initialize)) at LinePosition((sbt.Defaults) Defaults.scala, 156),
-  *   - by scope
-    *   - then by Source(e.g."Defaults.  Line xx)
-  *  
-  *   filter by...
-  *   - scope, setting, configuration, project, string, source
-  *   ex:
-    *   setting (ScopedKey (Scope(Select(
-    *   ProjectRef (file :/ Users / ashleyengelund / github / sbt - rtfd - markdown - test /, sbt - rtfd - markdown - test)
-      *  ),
-    *   Select (
-      *   ConfigKey (preprocess)
-        *  ),
-    *   Global, Global
-      *  ),
-    *   preprocessVars))
-  *   at LinePosition((com.typesafe.sbt.site.preprocess.PreprocessPlugin) PreprocessPlugin.scala, 31),
-  *  
-* ex: inTask (compile) (compileInputsSettings)(from Defaults is the
-    *  
-      *   supress / hide: (to save space)..project info, source( = linePosition, plugin, etc)
-*
-* AttributeMap
-  * entries, get(), contains()
-*
-* AttributeKey
-  * - can only get the value via a call to the attributeMap: the unique key is the tuple `(String,T)` (can have 2 different types with same label: String, thus the tuple makes up the unique key)
-* - the value might be delegated.Must use the.extend: method to find those items that it (might) delegate to
-*
-*
-* also examine:
-  * Build
-    * Defaults
-    * State
-    * - attributes: AttributesMap
-*
-* from Defaults:
+  *   - by tuple: project, configuration, scope
   *
-*
-
-
-trait BuildExtra extends BuildCommon with DefExtra {
+  * ex: setting
+  * setting (ScopedKey(Scope(Global, Global, Global, Global), initialize)) at LinePosition((sbt.Defaults) Defaults.scala, 156),
+  *   - by scope
+  *   - then by Source(e.g."Defaults.  Line xx)
+  *
+  * filter by...
+  *   - scope, setting, configuration, project, string, source
+  * ex:
+  * setting (ScopedKey (Scope(Select(
+  * ProjectRef (file :/ Users / ashleyengelund / github / sbt - rtfd - markdown - test /, sbt - rtfd - markdown - test)
+  * ),
+  * Select (
+  * ConfigKey (preprocess)
+  * ),
+  * Global, Global
+  * ),
+  * preprocessVars))
+  * at LinePosition((com.typesafe.sbt.site.preprocess.PreprocessPlugin) PreprocessPlugin.scala, 31),
+  *
+  * ex: inTask (compile) (compileInputsSettings)(from Defaults is the
+  *
+  * supress / hide: (to save space)..project info, source( = linePosition, plugin, etc)
+  *
+  * AttributeMap
+  * entries, get(), contains()
+  *
+  * AttributeKey
+  * - can only get the value via a call to the attributeMap: the unique key is the tuple `(String,T)` (can have 2 different types with same label: String, thus the tuple makes up the unique key)
+  * - the value might be delegated.Must use the.extend: method to find those items that it (might) delegate to
+  *
+  *
+  * also examine:
+  * Build
+  * Defaults
+  * State
+  * - attributes: AttributesMap
+  *
+  * from Defaults:
+  *
+  *
+  * *
+  *
+  * trait BuildExtra extends BuildCommon with DefExtra {
   * import Defaults._
-  *...interesting to see how scopes are referenced in these 2 methods:
-    **
+  * ...interesting to see how scopes are referenced in these 2 methods:
+  * *
   * def initScoped[T](sk: ScopedKey[_], i: Initialize[T]): Initialize[T] = initScope(fillTaskAxis(sk.scope, sk.key), i)
   * def initScope[T](s: Scope, i: Initialize[T]): Initialize[T] = i mapReferenced Project.mapScope(Scope.replaceThis(s))
   *
   *
   *
   * from ReleaseExtra.scala:
-    * getting scoped info from extracted project state:
+  * getting scoped info from extracted project state:
   * private[sbtrelease]
-
-  def resolve[T](key: ScopedKey[T], extracted: Extracted): ScopedKey[T] =
-    * Project
-
-  .mapScope(Scope.resolveScope(GlobalScope, extracted.currentRef.build, extracted.rootProject))(key.scopedKey)
+  * *
+  * def resolve[T](key: ScopedKey[T], extracted: Extracted): ScopedKey[T] =
+  * Project
+  * *
+  * .mapScope(Scope.resolveScope(GlobalScope, extracted.currentRef.build, extracted.rootProject))(key.scopedKey)
   *
   *
   *
   * from sbt doc (Build - State.html):
-    * All project data is stored in structure.data, which is of type sbt.Settings[Scope].
-    * Typically, one gets information of type T in the following way:
-    **
+  * All project data is stored in structure.data, which is of type sbt.Settings[Scope].
+  * Typically, one gets information of type T in the following way:
+  * *
   * val key: SettingKey[T]
   * val scope: Scope
   * val value: Option[T] = key in scope get structure.data
-  **
+  * *
   * Here, a SettingKey[T] is typically obtained from Keys and is the same type that is used to define settings in
-  *.sbt files, for example.Scope selects the scope the key is obtained for.There are convenience overloads of
+  * .sbt files, for example.Scope selects the scope the key is obtained for.There are convenience overloads of
   * in that can be used to specify only the required scope axes.See Structure.scala for where in and other parts of
-    * the settings interface are defined.Some examples:
-    **
+  * the settings interface are defined.Some examples:
+  * *
   * import Keys._
   * val extracted: Extracted
   * import extracted._
-  **
-    *   get name of current project
-    * val nameOpt: Option[String] = name in currentRef get structure.data
-  **
-    *   get the package options for the `test:packageSrc` task or Nil if none are defined
+  * *
+  * get name of current project
+  * val nameOpt: Option[String] = name in currentRef get structure.data
+  * *
+  * get the package options for the `test:packageSrc` task or Nil if none are defined
   * val pkgOpts: Seq[PackageOption] = packageOptions in(currentRef, Test, packageSrc) get structure.data getOrElse Nil
   *
   *
@@ -233,20 +233,20 @@ trait BuildExtra extends BuildCommon with DefExtra {
   */
 
 
-  //-----------------------------------------------------------------------------
-  // get the release settings version info and return it
-  val getCurrentReleaseVersion = taskKey[String]("get the currentrelease  version info from inquireVersions, return it as a String")
-  getCurrentReleaseVersion := {
+//-----------------------------------------------------------------------------
+// get the release settings version info and return it
+val getCurrentReleaseVersion = taskKey[String]("get the currentrelease  version info from inquireVersions, return it as a String")
+getCurrentReleaseVersion := {
 
-    val currentState = state.value
-    // is this enough to create the dependency we need on the inquireVersions ReleastState task?
-    //  this actually *calls* it. hm.  is that what we want?
-    val releaseInquireVersionDependency = ReleaseStateTransformations.inquireVersions.apply(currentState)
-    val releaseVers: Option[(String, String)] = releaseInquireVersionDependency.get(ReleaseKeys.versions)
-    val actualVersion: String = releaseVers.get._1 // we know it's the first base on how ReleasePlugin has defined it
-    currentState.log.info(s">> HOORAY! The actualVersion = $actualVersion")
-    actualVersion
-  }
+  val currentState = state.value
+  // is this enough to create the dependency we need on the inquireVersions ReleastState task?
+  //  this actually *calls* it. hm.  is that what we want?
+  val releaseInquireVersionDependency = ReleaseStateTransformations.inquireVersions.apply(currentState)
+  val releaseVers: Option[(String, String)] = releaseInquireVersionDependency.get(ReleaseKeys.versions)
+  val actualVersion: String = releaseVers.get._1 // we know it's the first base on how ReleasePlugin has defined it
+  currentState.log.info(s">> HOORAY! The actualVersion = $actualVersion")
+  actualVersion
+}
 
 
 //-----------------------------------------------------------------------------
@@ -254,183 +254,230 @@ trait BuildExtra extends BuildCommon with DefExtra {
 // try to read the version from version.sbt. return Option[String]: Some[String] on success, else
 //  example file contents:
 // version in ThisBuild := "0.15-SNAPSHOT"
+val readVersionFromFileName = taskKey[Option[Version]]("read the version from version.sbt")
+readVersionFromFileName := {
+  //(versionFN: String = "version.sbt"): Option[Version] = {
 
-  //-----------------------------------------------------------------------------
-  val generateSphinxConfigFile = taskKey[Unit]("Generate the config.py file for Sphinx using preprocess")
-  generateSphinxConfigFile := {
+  val versionFN = "version.sbt" // todo set source path, get filename
+  val versionRegEx = ("\\:=\\s*" + Version.VersionR.toString).r
+  val log = streams.value.log
+  var ver: Option[Version] = None // we assume failure and will return that unless we are successful
 
-    // TODO remove/rename existing config.py file
+  // TODO should these be sys.error instead of just logging them?
 
-    val currentState = state.value
+  try {
+    val fileLines = io.Source.fromFile(versionFN).getLines.toList
+    // we are only checking the first line (should have only 1 line)
+    if (fileLines.length < 1) log.error(s"The $versionFN is empty. No version was read")
+    else {
+      //     def versionFormatErrorAndLog:Option[Version] = {log.error(s"The version info in $versionFN is not compatible with the version format regex ${Version.VersionR.pattern.toString}"); None}
 
-    val currentReleaseVer: String = getCurrentReleaseVersion.value // current version as generated by release
-    println(s"-- currentReleaseVer: $currentReleaseVer")
-    //----------------------------
-    // based on code from Alive Alexander: @see http://alvinalexander.com/java/jwarehouse/akka-2.3/project/SphinxDoc.scala.shtml
+      ver = fileLines.head match {
+        case input => {
+          Version(input)
+          val v = Version(input).map(_.string).getOrElse(None) // FIXME  this is Serializable instead of a Version. Hm.
+          if (v == None) {
+            log.error(s"The version info in $versionFN is not compatible with the version format regex ${Version.VersionR.pattern.toString}")
+            None
+          } else None
+        }
+        case "" => {
+          log.error(s"Could not read any contents from $versionFN. It seems to be empty.")
+          None
+        }
+      }
+    }
 
-    def isPyFile(f: File): Boolean = f.getName.endsWith(".py")
-    //def isRstFile(f: File): Boolean = f.getName.endsWith(".rst") // not really needed, but here for symmetry
+    /*SimpleReader.readLine(prompt format ver) match {
+      case Some("") => ver
+      case Some(input) => Version(input).map(_.string).getOrElse(versionFormatError)
+      case None => sys.error("No version provided!")
+    }*/
 
-    val sphinxPreprocessFilter: FileFilter = new SimpleFileFilter(isPyFile) || ".rst" // must construct a FileFilter. this is one of the few ways to do it
+  } catch {
+    case ex: FileNotFoundException => log.error(s"Could not find $versionFN.")
+    case ex: IOException => log.error(s"Could not read $versionFN. (IOException)")
+  }
+  ver
+}
 
-    // customization of sphinx @<key>@ replacements, add to all sphinx-using projects
-    // add additional replacements here
+
+//-----------------------------------------------------------------------------
+val generateSphinxConfigFile = taskKey[Unit]("Generate the config.py file for Sphinx using preprocess")
+generateSphinxConfigFile := {
+
+  // TODO remove/rename existing config.py file
+
+  val currentState = state.value
+
+  val currentReleaseVer: String = getCurrentReleaseVersion.value // current version as generated by release
+  println(s"-- currentReleaseVer: $currentReleaseVer")
+  //----------------------------
+  // based on code from Alive Alexander: @see http://alvinalexander.com/java/jwarehouse/akka-2.3/project/SphinxDoc.scala.shtml
+
+  def isPyFile(f: File): Boolean = f.getName.endsWith(".py")
+  //def isRstFile(f: File): Boolean = f.getName.endsWith(".rst") // not really needed, but here for symmetry
+
+  val sphinxPreprocessFilter: FileFilter = new SimpleFileFilter(isPyFile) || ".rst" // must construct a FileFilter. this is one of the few ways to do it
+
+  // customization of sphinx @<key>@ replacements, add to all sphinx-using projects
+  // add additional replacements here
 
 
-    val sphinxTemplateValues = Map("PROJECT" -> normalizedName.value,
-      "VERSION" -> currentReleaseVer,
+  val sphinxTemplateValues = Map("PROJECT" -> normalizedName.value,
+    "VERSION" -> currentReleaseVer,
+    "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
+    "SHORTPROJECTVERSION" -> currentReleaseVer,
+    "LONGPROJECTVERSION" -> currentReleaseVer,
+    "AUTHORS" -> mainAuthor,
+    "MAINAUTHOR" -> mainAuthor,
+    "SHORTPROJECTDESC" -> description.value,
+    "EPUBPUBLISHER" -> mainAuthor)
+
+  // pre-processing settings for generating a sphinx config.py file
+  /**
+    * Need to have these settings set to what you want:
+    * (all in Preprocess):
+    * sourceDirectory,  // default = src/site-preprocess
+    * target,
+    * preprocessIncludeFilter,
+    * preprocessVars.
+    */
+
+  // Settings are VALS so are not updated (unless sbt is reloaded)
+  // NOTE: these have to be ALREADY INITIALIZED before this task is called.  that's why the exist in the project definition
+  // Thus they can't be changed here.
+  // TODO figure out how to address this.
+  /**
+    * A setting can be scoped in three axes (project, configuration, and task)
+    * we have just this 1 project and so can't change that axis
+    * but we can work with configuration and task
+    */
+  target in Preprocess := sourceDirectory.value / "sphinx"
+  preprocessIncludeFilter in Preprocess := sphinxPreprocessFilter
+  preprocessVars in Preprocess <<= Def.setting(Map("PROJECT" -> normalizedName.value,
+    "VERSION" -> currentReleaseVer,
+    "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
+    "SHORTPROJECTVERSION" -> currentReleaseVer,
+    "LONGPROJECTVERSION" -> currentReleaseVer,
+    "AUTHORS" -> mainAuthor,
+    "MAINAUTHOR" -> mainAuthor,
+    "SHORTPROJECTDESC" -> description.value,
+    "EPUBPUBLISHER" -> mainAuthor))
+  //  cleanFiles <+= target in preprocess in Sphinx
+
+  currentState.log.info(s"set version for sphinx to: $currentReleaseVer")
+  currentState.log.info("Preprocess settings:")
+  currentState.log.info(s"  target in Preprocess: ${(target in Preprocess).value}")
+  currentState.log.info(s"  preprocesIncludeFilter: ${(preprocessIncludeFilter in Preprocess).value}")
+  currentState.log.info(s"  preprocessVars: ${(preprocessVars in Preprocess).value.mkString(", ")}")
+}
+
+
+//---------------------------------------------
+
+val writeVersionIntoSphinxConfig = taskKey[Unit]("Runs preprocess:preprocess to replace template values in sphinx/config.py")
+writeVersionIntoSphinxConfig := {
+
+  val log = streams.value.log
+  log.warn("A warning from writeVersionIntoSphinxConfig.")
+
+  // get the version from release setReleaseVersion
+  val thisVer = ReleaseKeys.versions
+  log.info(s" ReleaseKeys.versions= $thisVer")
+  println(s" ReleaseKeys.versions= $thisVer")
+
+  val thisVersion = "0.9"
+  log.info(s" .... thisVer = $thisVer")
+  //val vs = get(ReleaseKeys.versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
+  //val thisVersion = vs._1 // the current version as defined by release
+
+  // now preprocess:
+  /*
+    preprocessVars in Preprocess := Map("PROJECT" -> normalizedName.value,
+      "VERSION" -> thisVersion,
       "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
-      "SHORTPROJECTVERSION" -> currentReleaseVer,
-      "LONGPROJECTVERSION" -> currentReleaseVer,
+      "SHORTPROJECTVERSION" -> thisVersion,
+      "LONGPROJECTVERSION" -> thisVersion,
       "AUTHORS" -> mainAuthor,
       "MAINAUTHOR" -> mainAuthor,
       "SHORTPROJECTDESC" -> description.value,
       "EPUBPUBLISHER" -> mainAuthor)
 
-    // pre-processing settings for generating a sphinx config.py file
-    /**
-      * Need to have these settings set to what you want:
-      * (all in Preprocess):
-      * sourceDirectory,  // default = src/site-preprocess
-      * target,
-      * preprocessIncludeFilter,
-      * preprocessVars.
-      */
+    log.info(s"set version for sphinx to: $thisVersion")
+    println(s"set version for sphinx to: $thisVersion")
 
-    // Settings are VALS so are not updated (unless sbt is reloaded)
-    // NOTE: these have to be ALREADY INITIALIZED before this task is called.  that's why the exist in the project definition
-    // Thus they can't be changed here.
-    // TODO figure out how to address this.
-    /**
-      * A setting can be scoped in three axes (project, configuration, and task)
-      * we have just this 1 project and so can't change that axis
-      * but we can work with configuration and task
-      */
-    target in Preprocess := sourceDirectory.value / "sphinx"
-    preprocessIncludeFilter in Preprocess := sphinxPreprocessFilter
-    preprocessVars in Preprocess <<= Def.setting(Map("PROJECT" -> normalizedName.value,
-      "VERSION" -> currentReleaseVer,
-      "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
-      "SHORTPROJECTVERSION" -> currentReleaseVer,
-      "LONGPROJECTVERSION" -> currentReleaseVer,
-      "AUTHORS" -> mainAuthor,
-      "MAINAUTHOR" -> mainAuthor,
-      "SHORTPROJECTDESC" -> description.value,
-      "EPUBPUBLISHER" -> mainAuthor))
-    //  cleanFiles <+= target in preprocess in Sphinx
+    preprocessIncludeFilter in Preprocess := "*.py"
+    preprocessIncludeFilter in Preprocess := (preprocessIncludeFilter in Preprocess).value || "*.rst"
 
-    currentState.log.info(s"set version for sphinx to: $currentReleaseVer")
-    currentState.log.info("Preprocess settings:")
-    currentState.log.info(s"  target in Preprocess: ${(target in Preprocess).value}")
-    currentState.log.info(s"  preprocesIncludeFilter: ${(preprocessIncludeFilter in Preprocess).value}")
-    currentState.log.info(s"  preprocessVars: ${(preprocessVars in Preprocess).value.mkString(", ")}")
-  }
+    sourceDirectory in Preprocess := sourceDirectory.value / "site-preprocess" / "sphinx"
+    target in Preprocess := baseDirectory.value / "src" / "sphinx" // this is where the preprocessed configuration file needs to be written
+  */
+  /*
+    val result: Option[(State, Result[sbt.File])] = Project.runTask(preprocess in Preprocess, state)
 
-
-  //---------------------------------------------
-
-  val writeVersionIntoSphinxConfig = taskKey[Unit]("Runs preprocess:preprocess to replace template values in sphinx/config.py")
-  writeVersionIntoSphinxConfig := {
-
-    val log = streams.value.log
-    log.warn("A warning from writeVersionIntoSphinxConfig.")
-
-    // get the version from release setReleaseVersion
-    val thisVer = ReleaseKeys.versions
-    log.info(s" ReleaseKeys.versions= $thisVer")
-    println(s" ReleaseKeys.versions= $thisVer")
-
-    val thisVersion = "0.9"
-    log.info(s" .... thisVer = $thisVer")
-    //val vs = get(ReleaseKeys.versions).getOrElse(sys.error("No versions are set! Was this release part executed before inquireVersions?"))
-    //val thisVersion = vs._1 // the current version as defined by release
-
-    // now preprocess:
-    /*
-      preprocessVars in Preprocess := Map("PROJECT" -> normalizedName.value,
-        "VERSION" -> thisVersion,
-        "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
-        "SHORTPROJECTVERSION" -> thisVersion,
-        "LONGPROJECTVERSION" -> thisVersion,
-        "AUTHORS" -> mainAuthor,
-        "MAINAUTHOR" -> mainAuthor,
-        "SHORTPROJECTDESC" -> description.value,
-        "EPUBPUBLISHER" -> mainAuthor)
-
-      log.info(s"set version for sphinx to: $thisVersion")
-      println(s"set version for sphinx to: $thisVersion")
-
-      preprocessIncludeFilter in Preprocess := "*.py"
-      preprocessIncludeFilter in Preprocess := (preprocessIncludeFilter in Preprocess).value || "*.rst"
-
-      sourceDirectory in Preprocess := sourceDirectory.value / "site-preprocess" / "sphinx"
-      target in Preprocess := baseDirectory.value / "src" / "sphinx" // this is where the preprocessed configuration file needs to be written
-    */
-    /*
-      val result: Option[(State, Result[sbt.File])] = Project.runTask(preprocess in Preprocess, state)
-
-      // handle the result
-      val resultingState:State = result match {
-         case None => {
-           // Key wasn't defined.
-           log.error(s"Error when trying to run preprocess: the preprocess task was not defined (Project.runTask(preprocess,state)) resulted in no state; no TaskKey for preprocess was found.")
-           state
-         }
-         case Some((newState, Inc(inc))) => {
-           // error detail, inc is of type Incomplete, use Incomplete.show(inc.tpe) to get an error message
-          log.error(s"Error when trying to run preprocess: ${Incomplete.show(inc.tpe)}")
-           newState
-         }
-         case Some((newState, Value(v))) => {
-           log.info(s"ran preprocess:preprocess to create a sphinx/config.py file with version=$thisVersion")
-           // success!
-           newState
-         }
+    // handle the result
+    val resultingState:State = result match {
+       case None => {
+         // Key wasn't defined.
+         log.error(s"Error when trying to run preprocess: the preprocess task was not defined (Project.runTask(preprocess,state)) resulted in no state; no TaskKey for preprocess was found.")
+         state
        }
-      */
+       case Some((newState, Inc(inc))) => {
+         // error detail, inc is of type Incomplete, use Incomplete.show(inc.tpe) to get an error message
+        log.error(s"Error when trying to run preprocess: ${Incomplete.show(inc.tpe)}")
+         newState
+       }
+       case Some((newState, Value(v))) => {
+         log.info(s"ran preprocess:preprocess to create a sphinx/config.py file with version=$thisVersion")
+         // success!
+         newState
+       }
+     }
+    */
 
-  }
+}
 
-  generateSphinxConfigFile <<= generateSphinxConfigFile dependsOn getCurrentReleaseVersion
-  preprocess in Preprocess <<= preprocess in Preprocess dependsOn generateSphinxConfigFile
-  generateHtml in Sphinx <<= generateHtml in Sphinx dependsOn (preprocess in Preprocess)
-
-
-  //------------------------
-  //  Github pages settings
-
-  ghpages.settings
-  git.remoteRepo := "git@github.com:weedy-sea-dragon/sbt-native-packager.git"
-
-
-  //-------------------------
-  // Release process and info (sbt-release plugin)
-
-
-  // Release configuration
-
-  //releasePublishArtifactsAction := PgpKeys.publishSigned.value
-
-  publishMavenStyle := false
-
-  import ReleaseTransformations._
+generateSphinxConfigFile <<= generateSphinxConfigFile dependsOn getCurrentReleaseVersion
+preprocess in Preprocess <<= preprocess in Preprocess dependsOn generateSphinxConfigFile
+generateHtml in Sphinx <<= generateHtml in Sphinx dependsOn (preprocess in Preprocess)
 
 
-  releaseProcess := Seq[ReleaseStep](
-    checkSnapshotDependencies,
-    inquireVersions,
-    releaseStepTask(getCurrentReleaseVersion),
-    //  runTest,
-    // releaseStepInputTask(scripted, " com.typesafe.sbt.packager.universal/* debian/* rpm/* docker/* ash/* jar/* bash/* jdkpackager/*"),
-    setReleaseVersion,
-    commitReleaseVersion,
-    tagRelease,
-    //  publishArtifacts,
-    setNextVersion,
-    commitNextVersion,
-    //pushChanges,
-    releaseStepTask(GhPagesKeys.pushSite)
-  )
+//------------------------
+//  Github pages settings
+
+ghpages.settings
+git.remoteRepo := "git@github.com:weedy-sea-dragon/sbt-native-packager.git"
+
+
+//-------------------------
+// Release process and info (sbt-release plugin)
+
+
+// Release configuration
+
+//releasePublishArtifactsAction := PgpKeys.publishSigned.value
+
+publishMavenStyle := false
+
+import ReleaseTransformations._
+
+
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies,
+  inquireVersions,
+  releaseStepTask(getCurrentReleaseVersion),
+  //  runTest,
+  // releaseStepInputTask(scripted, " com.typesafe.sbt.packager.universal/* debian/* rpm/* docker/* ash/* jar/* bash/* jdkpackager/*"),
+  setReleaseVersion,
+  commitReleaseVersion,
+  tagRelease,
+  //  publishArtifacts,
+  setNextVersion,
+  commitNextVersion,
+  //pushChanges,
+  releaseStepTask(GhPagesKeys.pushSite)
+)
 
 
 // ReadTheDocs will detect that a commit has been made to the github repository and will then
