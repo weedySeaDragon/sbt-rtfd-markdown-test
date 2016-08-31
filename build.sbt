@@ -332,7 +332,6 @@ import ReleaseTransformations._
 releaseProcess := Seq[ReleaseStep](
   checkSnapshotDependencies,
   inquireVersions,
-  releaseStepTask(getCurrentReleaseVersion),
   //  runTest,
   // releaseStepInputTask(scripted, " com.typesafe.sbt.packager.universal/* debian/* rpm/* docker/* ash/* jar/* bash/* jdkpackager/*"),
   setReleaseVersion,
