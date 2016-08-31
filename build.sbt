@@ -5,6 +5,8 @@ import java.time.format.DateTimeFormatter
 import com.typesafe.sbt.site.preprocess._
 import com.typesafe.sbt.site.preprocess.PreprocessPlugin._
 import sbt.Keys._
+import sbt.complete.DefaultParsers._
+import sbt.complete.Parser
 import sbtrelease._
 
 import scala.util.matching.Regex
@@ -284,6 +286,11 @@ readVersionFile := {
     case ex: IOException => log.error(s"Could not read $versionFN. (IOException)")
       None
   }
+  log.info(ver match {
+    case None => "Unable to read version.sbt"
+    case Some(v) => s"$versionFN has this version: ${v.string}"
+  })
+
   ver
 }
 
@@ -292,8 +299,8 @@ readVersionFile := {
 
 
 //-----------------------------------------------------------------------------
-val generateSphinxConfigFile = taskKey[Unit]("Generate the config.py file for Sphinx using preprocess")
-generateSphinxConfigFile := {
+val xgenerateSphinxConfigFile = taskKey[Unit]("Generate the config.py file for Sphinx using preprocess")
+xgenerateSphinxConfigFile := {
 
   // TODO remove/rename existing config.py file
 
@@ -434,9 +441,104 @@ writeVersionIntoSphinxConfig := {
 }
 
 //generateSphinxConfigFile <<= generateSphinxConfigFile dependsOn getCurrentReleaseVersion
-preprocess in Preprocess <<= preprocess in Preprocess dependsOn generateSphinxConfigFile
-generateHtml in Sphinx <<= generateHtml in Sphinx dependsOn (preprocess in Preprocess)
+//preprocess in Preprocess <<= preprocess in Preprocess dependsOn generateSphinxConfigFile
+//generateHtml in Sphinx <<= generateHtml in Sphinx dependsOn (preprocess in Preprocess)
 
+
+///-------------------------------------------
+
+def generateSphinxConfigAction(state:State, inputStr:String): State = {
+  val extracted = Project extract state
+  val log = state.log
+
+  // get the version info from the version.sbt file
+  val (readState, versionFromFile) = extracted.runTask(readVersionFile, state)
+
+  versionFromFile match  {
+    case None => {
+      // bad news.  we couldn't get the version.  tell the user and end here.
+      log.error("Could not read the version from the version.sbt file")
+      log.error("Cannot create a sphinx config.py file without the info from version.sbt.")
+      log.error("No config.py file will be generated.")
+      state.fail // we didn't change the state; return the one we started with
+    }
+    case Some(versionInfo) => {
+
+      // these are the settings we need to work with
+      val preproIncludeFilter = AttributeKey[SimpleFilter]("preprocessIncludeFilter")
+      val preproVars = AttributeKey[Map[String, String]]("preprocessVars")
+      val preproSource = AttributeKey[File]("sourceDirectory")
+      val preproTarget = AttributeKey[File]("target")
+      val preproVersion = AttributeKey[String]("version")
+
+
+      var resultingState = readState
+
+      val currentVerStr = versionInfo.string
+
+      def isPyFile(f: File): Boolean = f.getName.endsWith(".py")
+      //def isRstFile(f: File): Boolean = f.getName.endsWith(".rst") // not really needed, but here for symmetry
+      val sphinxPreprocessFilter: FileFilter = new SimpleFileFilter(isPyFile) || ".rst" // must construct a FileFilter. this is one of the few ways to do it
+
+      target in Preprocess := sourceDirectory.value / "sphinx"
+      preprocessIncludeFilter in Preprocess := sphinxPreprocessFilter
+      preprocessVars in Preprocess <<= Def.setting(Map("PROJECT" -> normalizedName.value,
+        "VERSION" -> currentVerStr,
+        "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
+        "SHORTPROJECTVERSION" -> currentVerStr,
+        "LONGPROJECTVERSION" -> currentVerStr,
+        "AUTHORS" -> mainAuthor,
+        "MAINAUTHOR" -> mainAuthor,
+        "SHORTPROJECTDESC" -> description.value,
+        "EPUBPUBLISHER" -> mainAuthor))
+      //  cleanFiles <+= target in preprocess in Sphinx
+
+     // extracted.append(, resultingState)
+      log.info(s"set version for sphinx to: $currentVerStr")
+      log.info("Preprocess settings:")
+      log.info(s"  target in Preprocess: ${(target in Preprocess).toString}")
+      log.info(s"  preprocesIncludeFilter: ${(preprocessIncludeFilter in Preprocess).toString}")
+      log.info(s"  preprocessVars: ${(preprocessVars in Preprocess).toString}")
+
+
+      // run the preprocess task so that it will the settings we modified above
+      val (nextS, _) = Project.extract(resultingState).runTask(preprocess in Preprocess, resultingState)
+
+      nextS
+    }
+  }
+
+}
+
+
+def genSphinxConfigParser(state: State): Parser[String] = {
+
+  val str = StringBasic
+
+  val complete = (token(str, "<str>")) map {
+    case (s) => s
+  }
+  Space ~> complete
+}
+
+val genSphinxConfigHelp = Help(
+  Seq(
+    "generate-sphinx-configFile" -> "Generates a Sphinx config.py file using the version info from version.sbt"
+  ),
+  Map(
+    "generate-sphinx-configFile" ->
+      """|Generates a Sphinx config.py file using preprocess to replace template @VALUES@
+        |1. Read the version info from version.sbt
+        |2. Set preprocess:preprocessVars with the version info, authors, and project description
+        |3. Run preprocess:preprocess using src/site-preprocess/ as the source, and src/sphinx as the target
+        |Note that the settings changed during this command (like preprocess:preprocessVars) ARE NOT SAVED.
+        |The values temporarily used by this command will revert to their original values once the command is finished.""".stripMargin
+  )
+)
+
+val generateSphinxConfigCommand = Command("generate-sphinx-configFile", genSphinxConfigHelp)(genSphinxConfigParser)(generateSphinxConfigAction)
+
+commands += generateSphinxConfigCommand
 
 //------------------------
 //  Github pages settings
@@ -499,6 +601,7 @@ showPsks := {
   //  val extractedState =  Project.extract(state.value)
   //  val extratedBuildStructure = Project.structure(state.value)
 
+
   // get the key for all known configurations, including Global:
   // Seq(...) must be Def.Setting[ ] (not AttributeKey). That's why we use pskSetting & pskTSetting instead of psk and pskTask
   val myPsks = projectConfigurations.flatMap { config => inConfig(config)(Seq(pskSetting, pskTSetting)) }.distinct
@@ -506,10 +609,10 @@ showPsks := {
   //println(s" extractedState = ${extractedState}")
   println(s"\n *** psk in all scopes (Configuration, Task, Project, Extras) tuple:\n")
 
-  myPsks.foreach((currPsk:Def.Setting[_]) => {
+  myPsks.foreach((currPsk: Def.Setting[_]) => {
     val desc = currPsk.key.key.description.getOrElse("")
     val currScope = currPsk.key.scope
-    val currConfigKey:ConfigKey = currScope.config.toOption.get
+    val currConfigKey: ConfigKey = currScope.config.toOption.get
 
     println(s" this key: ${currPsk.key.key} label: ${currPsk.key.key.label} desc: $desc")
     println(s"   Scope: config: ${currConfigKey.name}, task: ${currScope.task}, project: ${currScope.project}, extra key(s): ${currScope.extra} ")
