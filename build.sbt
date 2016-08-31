@@ -260,6 +260,8 @@ def generateSphinxConfigAction(state: State): State = {
     }
     case Some(versionInfo) => {
       val currentVerStr = versionInfo.string // version info from the version.sbt file
+// TODO: rename the template-config.py to config.py.
+      // ReadTheDocs will search the site for a config.py.  If it finds one, it assumes it should be used to generate the site.  So we can't leave an 'extra' config.py around, even if it's supposed to be a template file
 
       def isPyFile(f: File): Boolean = f.getName.endsWith(".py")
       //def isRstFile(f: File): Boolean = f.getName.endsWith(".rst") // not really needed, but here for symmetry
@@ -283,6 +285,7 @@ def generateSphinxConfigAction(state: State): State = {
 
       // run the preprocess task so that it will the settings we modified above
       val (newState2, result) = Project.extract(newState).runTask(preprocess in Preprocess, newState)
+      // TODO: rename the config.py back to template-config.py
       newState2
     }
   }
