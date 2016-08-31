@@ -497,16 +497,17 @@ val genSphinxConfigHelp = Help(
   ),
   Map(
     "generate-sphinx-configFile" ->
-      """|Generates a Sphinx config.py file using preprocess to replace template @VALUES@
+      """|Generates a Sphinx config.py file using the preprocess:preprocess task to replace template @VALUES@
         |1. Read the version info from version.sbt
         |2. Set preprocess:preprocessVars with the version info, authors, and project description
-        |3. Run preprocess:preprocess using src/site-preprocess/ as the source, and src/sphinx as the target
-        |Note that the settings changed during this command (like preprocess:preprocessVars) ARE NOT SAVED.
-        |The values temporarily used by this command will revert to their original values once the command is finished.""".stripMargin
-  )
-)
+        |3. Run preprocess:preprocess using src/site-preprocess/[*.py & *.rst] as the source, and src/sphinx as the target
+        |4. This should generate a config.py file that Sphinx will use when it generates documenation.
+        |   Sphinx will read values from the config.py file and insert them. For example, the information shown for
+        |   the copyright is read from the config.py file.""".stripMargin
+  ))
 
-val generateSphinxConfigCommand = Command.command("generate-sphinx-configFile")(generateSphinxConfigAction)
+
+val generateSphinxConfigCommand = Command.command("generate-sphinx-configFile", genSphinxConfigHelp)(generateSphinxConfigAction)
 
 commands += generateSphinxConfigCommand
 
