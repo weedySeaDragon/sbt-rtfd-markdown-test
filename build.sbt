@@ -543,6 +543,7 @@ releaseProcess := Seq[ReleaseStep](
   //  publishArtifacts,
   setNextVersion,
   commitNextVersion,
+  releaseStepCommand(generateSphinxConfigCommand),
   //pushChanges,
   releaseStepTask(GhPagesKeys.pushSite)
 )
