@@ -443,8 +443,8 @@ writeVersionIntoSphinxConfig := {
 //generateHtml in Sphinx <<= generateHtml in Sphinx dependsOn (preprocess in Preprocess)
 
 
-///-------------------------------------------
-
+//-------------------------------------------
+//  will this overwrite an existing config.py file?  should be an option?
 def generateSphinxConfigAction(state: State): State = {
   val extracted = Project extract state
   val log = state.log
