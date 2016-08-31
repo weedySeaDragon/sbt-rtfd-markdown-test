@@ -131,9 +131,7 @@ dumpInfo := {
 //---------------
 
 /**
-  *
-  * *
-  * // TODO get current info in a readable way!
+  * TODO get current info in a readable way!
   */
 /**
   * reminder: settings are immutable, tasks(TaskSettings) are not -- they are evaluated each time they 're called
@@ -447,14 +445,14 @@ writeVersionIntoSphinxConfig := {
 
 ///-------------------------------------------
 
-def generateSphinxConfigAction(state:State, inputStr:String): State = {
+def generateSphinxConfigAction(state: State): State = {
   val extracted = Project extract state
   val log = state.log
 
   // get the version info from the version.sbt file
   val (readState, versionFromFile) = extracted.runTask(readVersionFile, state)
 
-  versionFromFile match  {
+  versionFromFile match {
     case None => {
       // bad news.  we couldn't get the version.  tell the user and end here.
       log.error("Could not read the version from the version.sbt file")
@@ -463,26 +461,15 @@ def generateSphinxConfigAction(state:State, inputStr:String): State = {
       state.fail // we didn't change the state; return the one we started with
     }
     case Some(versionInfo) => {
-
-      // these are the settings we need to work with
-      val preproIncludeFilter = AttributeKey[SimpleFilter]("preprocessIncludeFilter")
-      val preproVars = AttributeKey[Map[String, String]]("preprocessVars")
-      val preproSource = AttributeKey[File]("sourceDirectory")
-      val preproTarget = AttributeKey[File]("target")
-      val preproVersion = AttributeKey[String]("version")
-
-
-      var resultingState = readState
-
-      val currentVerStr = versionInfo.string
+      val currentVerStr = versionInfo.string // version info from the version.sbt file
 
       def isPyFile(f: File): Boolean = f.getName.endsWith(".py")
       //def isRstFile(f: File): Boolean = f.getName.endsWith(".rst") // not really needed, but here for symmetry
       val sphinxPreprocessFilter: FileFilter = new SimpleFileFilter(isPyFile) || ".rst" // must construct a FileFilter. this is one of the few ways to do it
 
-      target in Preprocess := sourceDirectory.value / "sphinx"
-      preprocessIncludeFilter in Preprocess := sphinxPreprocessFilter
-      preprocessVars in Preprocess <<= Def.setting(Map("PROJECT" -> normalizedName.value,
+      val newTarget = target in Preprocess := sourceDirectory.value / "sphinx"
+      val newIncludeFilter = preprocessIncludeFilter in Preprocess := sphinxPreprocessFilter
+      val newPreproVars = preprocessVars in Preprocess := Map("PROJECT" -> normalizedName.value,
         "VERSION" -> currentVerStr,
         "SHORTCOPYRIGHTINFO" -> s"${Year.now()} $mainAuthor",
         "SHORTPROJECTVERSION" -> currentVerStr,
@@ -490,35 +477,18 @@ def generateSphinxConfigAction(state:State, inputStr:String): State = {
         "AUTHORS" -> mainAuthor,
         "MAINAUTHOR" -> mainAuthor,
         "SHORTPROJECTDESC" -> description.value,
-        "EPUBPUBLISHER" -> mainAuthor))
-      //  cleanFiles <+= target in preprocess in Sphinx
+        "EPUBPUBLISHER" -> mainAuthor)
 
-     // extracted.append(, resultingState)
-      log.info(s"set version for sphinx to: $currentVerStr")
-      log.info("Preprocess settings:")
-      log.info(s"  target in Preprocess: ${(target in Preprocess).toString}")
-      log.info(s"  preprocesIncludeFilter: ${(preprocessIncludeFilter in Preprocess).toString}")
-      log.info(s"  preprocessVars: ${(preprocessVars in Preprocess).toString}")
-
+      // must first add these modified settings to a new state by doing this:
+      //  otherwise they won't be available for use (or set to what we just set them to)
+      val newState = extracted.append(Seq(newTarget, newIncludeFilter, newPreproVars), readState)
 
       // run the preprocess task so that it will the settings we modified above
-      val (nextS, _) = Project.extract(resultingState).runTask(preprocess in Preprocess, resultingState)
-
-      nextS
+      val (newState2, result) = Project.extract(newState).runTask(preprocess in Preprocess, newState)
+      newState2
     }
   }
 
-}
-
-
-def genSphinxConfigParser(state: State): Parser[String] = {
-
-  val str = StringBasic
-
-  val complete = (token(str, "<str>")) map {
-    case (s) => s
-  }
-  Space ~> complete
 }
 
 val genSphinxConfigHelp = Help(
@@ -536,7 +506,7 @@ val genSphinxConfigHelp = Help(
   )
 )
 
-val generateSphinxConfigCommand = Command("generate-sphinx-configFile", genSphinxConfigHelp)(genSphinxConfigParser)(generateSphinxConfigAction)
+val generateSphinxConfigCommand = Command.command("generate-sphinx-configFile")(generateSphinxConfigAction)
 
 commands += generateSphinxConfigCommand
 
