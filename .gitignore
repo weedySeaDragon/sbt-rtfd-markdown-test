@@ -1,3 +1,8 @@
 .idea
 target
+output.txt
+dumpInfoOutput--Settings-ProjectState.txt
+dependencies-module-sbt-rtfd-markdown-test-build--output.txt
+.history
 
+src/sphinx/conf.py
